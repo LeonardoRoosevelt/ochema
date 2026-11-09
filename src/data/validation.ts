@@ -36,7 +36,7 @@ function checksumOk(id: string): boolean {
   return sum % 10 === 0
 }
 
-/** 身分證檢查：只警示不阻擋；空字串回 required。 */
+/** 駕駛身分證檢查：只警示不阻擋；空字串回 required。 */
 export function checkIdNumber(raw: string): IdCheck {
   const value = raw.trim()
   if (value.length === 0) return { status: 'required', code: 'REQUIRED', value: '' }

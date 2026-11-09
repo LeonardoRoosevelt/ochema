@@ -87,7 +87,7 @@ describe('車牌邊界 checkPlate', () => {
   it.todo('[未定義] 車牌長度上限：契約與 DBML 皆無長度規則，是否應限制（例如 20 字元）待製片人決定')
 })
 
-// ── 身分證 ────────────────────────────────────────────────
+// ── 駕駛身分證 ────────────────────────────────────────────────
 
 /** 契約 §1.1 的檢查碼公式，在測試端獨立再實作一次（交叉驗證 src 的實作） */
 const N: Record<string, number> = {
@@ -104,7 +104,7 @@ function withCheckDigit(letter: string, second: string, middle7: string): string
   return `${letter}${body}${check}`
 }
 
-describe('身分證邊界 checkIdNumber', () => {
+describe('駕駛身分證邊界 checkIdNumber', () => {
   it.each(['A123456789', 'F131104093', 'A800000014', 'B900000017'])('已實測合格：%s', (id) => {
     expect(checkIdNumber(id)).toEqual({ status: 'ok', value: id })
   })
@@ -170,32 +170,32 @@ describe('身分證邊界 checkIdNumber', () => {
     expect((checkIdNumber('😀12345678') as { code: string }).code).toBe('ID_FIRST_NOT_ALPHA')
     expect((checkIdNumber('A1234567😀') as { code: string }).code).toBe('ID_NON_DIGIT')
   })
-  it.todo('[未定義] 身分證長度應以 code point 還是 UTF-16 code unit 計算（目前為後者）')
+  it.todo('[未定義] 駕駛身分證長度應以 code point 還是 UTF-16 code unit 計算（目前為後者）')
 })
 
 describe('validateRecordInput 的組合邊界', () => {
   const ok = { headPlate: 'A-1', tailPlate: 'B-2', ownerName: '王小明', idNumber: 'A123456789' }
 
-  it('四欄皆不合時，firstError 依 FIELD_ORDER 取車頭', () => {
+  it('四欄皆不合時，firstError 依 FIELD_ORDER 取車頭車號', () => {
     const v = validateRecordInput({ headPlate: '', tailPlate: '', ownerName: '', idNumber: '' })
     expect(v.errors).toEqual({ headPlate: 'REQUIRED', tailPlate: 'REQUIRED', ownerName: 'REQUIRED', idNumber: 'REQUIRED' })
     expect(v.firstError).toEqual({ field: 'headPlate', code: 'REQUIRED' })
-    expect(v.idWarning).toBeUndefined() // 身分證為空時不給警示
+    expect(v.idWarning).toBeUndefined() // 駕駛身分證為空時不給警示
   })
 
-  it('身分證格式不合只警示：errors 為空、仍可存', () => {
+  it('駕駛身分證格式不合只警示：errors 為空、仍可存', () => {
     const v = validateRecordInput({ ...ok, idNumber: 'a12345678' })
     expect(v.errors).toEqual({})
     expect(v.firstError).toBeUndefined()
     expect(v.idWarning).toBe('ID_LENGTH')
   })
 
-  it('姓名只有空白（含 NBSP、全形空白）→ REQUIRED', () => {
+  it('駕駛姓名只有空白（含 NBSP、全形空白）→ REQUIRED', () => {
     const v = validateRecordInput({ ...ok, ownerName: '\u00A0\u3000  ' })
     expect(v.errors).toEqual({ ownerName: 'REQUIRED' })
   })
 
-  it('姓名無格式規則：emoji、組合字、全形、零寬、超長皆可；只 trim 邊緣', () => {
+  it('駕駛姓名無格式規則：emoji、組合字、全形、零寬、超長皆可；只 trim 邊緣', () => {
     for (const name of ['😀', '👨‍👩‍👧‍👦', 'é', 'Ａ１', '王\u200B小明', '王'.repeat(50_000)]) {
       const v = validateRecordInput({ ...ok, ownerName: name })
       expect(v.errors, name.slice(0, 5)).toEqual({})
@@ -204,5 +204,5 @@ describe('validateRecordInput 的組合邊界', () => {
     expect(validateRecordInput({ ...ok, ownerName: '\u00A0王小明\u3000' }).fields.ownerName).toBe('王小明')
   })
 
-  it.todo('[未定義] 姓名只有零寬字元（U+200B）：trim 不會移除，目前視為有值而存入（看起來是空白）')
+  it.todo('[未定義] 駕駛姓名只有零寬字元（U+200B）：trim 不會移除，目前視為有值而存入（看起來是空白）')
 })

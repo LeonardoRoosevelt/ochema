@@ -12,7 +12,7 @@ const readFirst = (bytes: Uint8Array) => {
   return { wb, ws: wb.Sheets[wb.SheetNames[0]!]! }
 }
 const numberSheet = (value: number, fmt: string) => {
-  const ws = XLSX.utils.aoa_to_sheet([['姓名'], ['x']])
+  const ws = XLSX.utils.aoa_to_sheet([['駕駛姓名'], ['x']])
   ws['A2'] = { t: 'n', v: value, z: fmt }
   return ws
 }
@@ -43,7 +43,7 @@ describe.each([
   })
 
   test(`T3 空名單只有標題列（${name}）`, () => {
-    const { ws } = readFirst(workbookBytes(sheetFromGrid([['車頭', '車尾', '姓名', '身分證']]), bookType))
+    const { ws } = readFirst(workbookBytes(sheetFromGrid([['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證']]), bookType))
     expect(XLSX.utils.decode_range(ws['!ref']!).e.r).toBe(0)
   })
 
@@ -101,7 +101,7 @@ describe('SheetJS 其他', () => {
   })
 
   test('跨 realm：jsdom 下 Uint8Array 輸入可被 XLSX.read 讀取', () => {
-    const bytes = workbookBytes(sheetFromGrid([['車頭'], ['929-X2']]), 'xlsx')
+    const bytes = workbookBytes(sheetFromGrid([['車頭車號'], ['929-X2']]), 'xlsx')
     expect(readFirst(new Uint8Array(bytes.buffer.slice(0))).ws['A2'].v).toBe('929-X2')
   })
 })

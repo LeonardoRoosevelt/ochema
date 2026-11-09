@@ -22,10 +22,10 @@ import { Ui } from './ui'
 import type { FileSpec } from './workbook'
 
 export const COLUMN_TO_KEY = {
-  車頭: 'headPlate',
-  車尾: 'tailPlate',
-  姓名: 'ownerName',
-  身分證: 'idNumber',
+  車頭車號: 'headPlate',
+  車斗車號: 'tailPlate',
+  駕駛姓名: 'ownerName',
+  駕駛身分證: 'idNumber',
 } as const satisfies Record<string, keyof RecordFields>
 export type ColumnTitle = keyof typeof COLUMN_TO_KEY
 
@@ -38,7 +38,7 @@ export const fields = (h: string, t: string, n: string, i: string): RecordFields
 
 /** Gherkin 資料表的一列（鍵為中文欄名）→ RecordFields */
 export function rowToFields(row: Record<string, string>): RecordFields {
-  return fields(row['車頭'] ?? '', row['車尾'] ?? '', row['姓名'] ?? '', row['身分證'] ?? '')
+  return fields(row['車頭車號'] ?? '', row['車斗車號'] ?? '', row['駕駛姓名'] ?? '', row['駕駛身分證'] ?? '')
 }
 
 export const stripId = ({ id: _id, ...rest }: VehicleRecord): RecordFields => rest

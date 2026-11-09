@@ -21,8 +21,8 @@ const formatOf = (label: string): ExportFormat => {
   return f
 }
 const RADIO_BY_FORMAT = { xlsx: '.xlsx', xls: '.xls', csv: 'CSV' } as const
-const COL_INDEX = { 車頭: 0, 車尾: 1, 姓名: 2, 身分證: 3 } as const
-const HEADERS = ['車頭', '車尾', '姓名', '身分證']
+const COL_INDEX = { 車頭車號: 0, 車斗車號: 1, 駕駛姓名: 2, 駕駛身分證: 3 } as const
+const HEADERS = ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證']
 
 const MAGIC = {
   xlsx: [0x50, 0x4b, 0x03, 0x04],
@@ -63,7 +63,7 @@ export function registerExport(r: Reg) {
     expect(w.exportedRecords.length, '匯出前的名單不該是空的，否則這個斷言沒有意義').toBeGreaterThan(0)
   })
 
-  r.step('匯出檔第一列標題依序為 車頭、車尾、姓名、身分證', (w) => {
+  r.step('匯出檔第一列標題依序為 車頭車號、車斗車號、駕駛姓名、駕駛身分證', (w) => {
     expect(sheetOf(w).sheet.headers).toEqual(HEADERS)
   })
   r.step('匯出檔有 {int} 列資料，順序與名單一致', (w, n: number) => {
@@ -143,9 +143,9 @@ export function registerExport(r: Reg) {
   const exportedRows = (w: World, n: number, names: string[]) => {
     const { sheet } = downloaded(w)
     expect(sheet.rows, '匯出的資料列數').toHaveLength(n)
-    expect(sheet.rows.map((row) => row[COL_INDEX['姓名']])).toEqual(expect.arrayContaining(names))
+    expect(sheet.rows.map((row) => row[COL_INDEX['駕駛姓名']])).toEqual(expect.arrayContaining(names))
   }
-  r.step('匯出的 {any} 檔有 {int} 列資料，包含姓名 {string} 與 {string}', (w, _label: string, n: number, a: string, b: string) => {
+  r.step('匯出的 {any} 檔有 {int} 列資料，包含駕駛姓名 {string} 與 {string}', (w, _label: string, n: number, a: string, b: string) => {
     exportedRows(w, n, [a, b])
   })
   r.step('匯出的 {any} 檔有 {int} 列資料', (w, _label: string, n: number) => {

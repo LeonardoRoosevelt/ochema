@@ -28,7 +28,7 @@ export function IdWarningTag({ code }: { code: IdWarning }) {
   return (
     <span className="tag tag-warn">
       <Icon name="warn" />
-      <span>身分證警示：{ID_WARNING_TEXT[code]}</span>
+      <span>駕駛身分證警示：{ID_WARNING_TEXT[code]}</span>
     </span>
   )
 }
@@ -46,7 +46,7 @@ interface RecordTableProps {
 /**
  * S1 名單。桌面為表格、手機為卡片，共用同一份 DOM（由 CSS 轉換）；
  * 因此明確標上 ARIA 角色，避免 CSS 把 display 改成 grid／block 之後瀏覽器丟掉表格語意。
- * 前四格的文字就是值（無任何前綴）；重複種類與身分證警示都放在「標示」格。
+ * 前四格的文字就是值（無任何前綴）；重複種類與駕駛身分證警示都放在「標示」格。
  */
 export function RecordTable({ records, kindsById, idWarningById, keyword, onEdit, onDelete }: RecordTableProps) {
   const [limit, setLimit] = useState(PAGE_SIZE)
@@ -57,7 +57,7 @@ export function RecordTable({ records, kindsById, idWarningById, keyword, onEdit
       <table className="grid main" role="table" aria-label="車輛所屬名單" aria-rowcount={records.length + 1}>
         <thead role="rowgroup">
           <tr role="row" aria-rowindex={1}>
-            {['車頭', '車尾', '姓名', '身分證', '標示', '操作'].map((h) => (
+            {['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證', '標示', '操作'].map((h) => (
               <th key={h} role="columnheader" scope="col">
                 {h}
               </th>
@@ -71,20 +71,20 @@ export function RecordTable({ records, kindsById, idWarningById, keyword, onEdit
             const label = `${r.headPlate}（${r.ownerName}）`
             return (
               <tr key={r.id} role="row" aria-rowindex={index + 2} className={`${kinds.length ? 'has-dup' : ''} ${warning ? 'has-warn' : ''}`.trim()}>
-                <td role="cell" data-label="車頭" className="c-head">
+                <td role="cell" data-label="車頭車號" className="c-head">
                   <span className="plate plate-head">
                     <Hl text={r.headPlate} keyword={keyword} />
                   </span>
                 </td>
-                <td role="cell" data-label="車尾" className="c-tail">
+                <td role="cell" data-label="車斗車號" className="c-tail">
                   <span className="plate plate-tail">
                     <Hl text={r.tailPlate} keyword={keyword} />
                   </span>
                 </td>
-                <td role="cell" data-label="姓名" className="c-name">
+                <td role="cell" data-label="駕駛姓名" className="c-name">
                   <Hl text={r.ownerName} keyword={keyword} />
                 </td>
-                <td role="cell" data-label="身分證" className="c-id">
+                <td role="cell" data-label="駕駛身分證" className="c-id">
                   <span className="idv">
                     <Hl text={r.idNumber} keyword={keyword} />
                   </span>

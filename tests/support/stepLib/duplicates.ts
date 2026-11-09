@@ -8,13 +8,13 @@ import { norm } from '../ui'
 import { quoted, type Reg } from './reg'
 
 export const KIND_BY_LABEL: Record<string, DuplicateKind> = {
-  同車頭: 'SAME_HEAD',
-  同車尾: 'SAME_TAIL',
-  同身分證不同姓名: 'SAME_ID_DIFF_NAME',
+  同車頭車號: 'SAME_HEAD',
+  同車斗車號: 'SAME_TAIL',
+  同駕駛身分證不同姓名: 'SAME_ID_DIFF_NAME',
 }
 const LABELS = Object.keys(KIND_BY_LABEL)
 
-/** 「車頭 "929-X2"、姓名 "王小明"」→ 值清單（用於檢查畫面上列出的衝突資料） */
+/** 「車頭車號 "929-X2"、駕駛姓名 "王小明"」→ 值清單（用於檢查畫面上列出的衝突資料） */
 function valuesIn(desc: string): string[] {
   return quoted(desc)
 }
@@ -46,7 +46,7 @@ export function registerDuplicates(r: Reg) {
     expect(w.report!.groups).toEqual([])
     expect(w.report!.byRecordId.size).toBe(0)
   })
-  r.step('這兩筆資料都同時被標為「同車頭」與「同身分證不同姓名」', (w) => {
+  r.step('這兩筆資料都同時被標為「同車頭車號」與「同駕駛身分證不同姓名」', (w) => {
     expect(w.recordsAtCheck).toHaveLength(2)
     for (const rec of w.recordsAtCheck) {
       const kinds = w.report!.byRecordId.get(rec.id) ?? []
@@ -54,7 +54,7 @@ export function registerDuplicates(r: Reg) {
       expect(kinds).toContain('SAME_ID_DIFF_NAME')
     }
   })
-  r.step('這兩筆資料都沒有被標為「同車尾」', (w) => {
+  r.step('這兩筆資料都沒有被標為「同車斗車號」', (w) => {
     for (const rec of w.recordsAtCheck) expect(w.report!.byRecordId.get(rec.id) ?? []).not.toContain('SAME_TAIL')
   })
 
@@ -83,7 +83,7 @@ export function registerDuplicates(r: Reg) {
 
   // ── @ui：整列相同被擋 ──
   r.step(
-    '畫面告知原因是與既有資料整列相同，並列出該筆既有資料：車頭 {string}、車尾 {string}、姓名 {string}、身分證 {string}',
+    '畫面告知原因是與既有資料整列相同，並列出該筆既有資料：車頭車號 {string}、車斗車號 {string}、駕駛姓名 {string}、駕駛身分證 {string}',
     (w, h: string, t: string, n: string, i: string) => {
       const text = w.ui.alertText()
       expect(text).toContain('整列相同')
@@ -91,7 +91,7 @@ export function registerDuplicates(r: Reg) {
     },
   )
   r.step(
-    '姓名為 {string} 的那筆仍是：車頭 {string}、車尾 {string}、身分證 {string}',
+    '駕駛姓名為 {string} 的那筆仍是：車頭車號 {string}、車斗車號 {string}、駕駛身分證 {string}',
     async (w, name: string, h: string, t: string, i: string) => {
       await w.ui.goList()
       expect(w.ui.rowValues(rowByName(w, name))).toEqual(fields(h, t, name, i))
@@ -100,7 +100,7 @@ export function registerDuplicates(r: Reg) {
 
   // ── @ui：編輯 ──
   r.when(
-    '我把姓名為 {string} 的那筆改成：車頭 {string}、車尾 {string}、姓名 {string}、身分證 {string} 並儲存',
+    '我把駕駛姓名為 {string} 的那筆改成：車頭車號 {string}、車斗車號 {string}、駕駛姓名 {string}、駕駛身分證 {string} 並儲存',
     async (w, name: string, h: string, t: string, n: string, i: string) => {
       await w.ui.goList()
       w.snapshotBeforeAction = await listRecords()
@@ -109,69 +109,69 @@ export function registerDuplicates(r: Reg) {
       await w.ui.editRow(rowByName(w, name), fields(h, t, n, i))
     },
   )
-  r.when('我把姓名為 {string} 的那筆的車頭改成 {string} 並儲存', async (w, name: string, head: string) => {
+  r.when('我把駕駛姓名為 {string} 的那筆的車頭車號改成 {string} 並儲存', async (w, name: string, head: string) => {
     await editOne(w, name, { headPlate: head })
   })
-  r.when('我把姓名為 {string} 的那筆的姓名改成 {string} 並儲存', async (w, name: string, next: string) => {
+  r.when('我把駕駛姓名為 {string} 的那筆的駕駛姓名改成 {string} 並儲存', async (w, name: string, next: string) => {
     await editOne(w, name, { ownerName: next })
   })
-  r.when('我刪除姓名為 {string} 的那筆資料', async (w, name: string) => {
+  r.when('我刪除駕駛姓名為 {string} 的那筆資料', async (w, name: string) => {
     await w.ui.goList()
     const dialog = await w.ui.requestDelete(rowByName(w, name))
     await w.ui.confirmDelete(dialog)
   })
 
   // ── @ui：名單上的重複標示 ──
-  r.step('車頭 {string} 的兩筆資料都標示為重複', async (w, head: string) => {
+  r.step('車頭車號 {string} 的兩筆資料都標示為重複', async (w, head: string) => {
     await w.ui.goList()
     const rows = rowsWithHead(w, head)
-    expect(rows, `車頭 ${head} 的列數`).toHaveLength(2)
-    for (const row of rows) expect(w.ui.marks(row)).toMatch(/同車頭|同車尾|同身分證不同姓名/)
+    expect(rows, `車頭車號 ${head} 的列數`).toHaveLength(2)
+    for (const row of rows) expect(w.ui.marks(row)).toMatch(/同車頭車號|同車斗車號|同駕駛身分證不同姓名/)
   })
-  r.step('車頭 {string} 的兩筆資料都標示為重複，並顯示重複種類「同車頭」', async (w, head: string) => {
+  r.step('車頭車號 {string} 的兩筆資料都標示為重複，並顯示重複種類「同車頭車號」', async (w, head: string) => {
     await w.ui.goList()
     const rows = rowsWithHead(w, head)
-    expect(rows, `車頭 ${head} 的列數`).toHaveLength(2)
-    for (const row of rows) expect(w.ui.marks(row)).toContain('同車頭')
+    expect(rows, `車頭車號 ${head} 的列數`).toHaveLength(2)
+    for (const row of rows) expect(w.ui.marks(row)).toContain('同車頭車號')
   })
-  r.step('車頭 {string} 的資料沒有重複標示', async (w, head: string) => {
+  r.step('車頭車號 {string} 的資料沒有重複標示', async (w, head: string) => {
     await w.ui.goList()
     const rows = rowsWithHead(w, head)
     expect(rows).toHaveLength(1)
-    expect(w.ui.marks(rows[0]!)).not.toMatch(/同車頭|同車尾|同身分證不同姓名/)
+    expect(w.ui.marks(rows[0]!)).not.toMatch(/同車頭車號|同車斗車號|同駕駛身分證不同姓名/)
   })
-  r.step('兩筆資料仍標示為重複，重複種類只有「同車頭」', async (w) => {
+  r.step('兩筆資料仍標示為重複，重複種類只有「同車頭車號」', async (w) => {
     await w.ui.goList()
     const rows = w.ui.rows()
     expect(rows).toHaveLength(2)
     for (const row of rows) {
       const m = w.ui.marks(row)
-      expect(m).toContain('同車頭')
-      expect(m).not.toContain('同車尾')
-      expect(m).not.toContain('同身分證不同姓名')
+      expect(m).toContain('同車頭車號')
+      expect(m).not.toContain('同車斗車號')
+      expect(m).not.toContain('同駕駛身分證不同姓名')
     }
   })
   r.step('兩筆資料都不再標示重複', async (w) => {
     await w.ui.goList()
     const rows = w.ui.rows()
     expect(rows).toHaveLength(2)
-    for (const row of rows) expect(w.ui.marks(row)).not.toMatch(/同車頭|同車尾|同身分證不同姓名/)
+    for (const row of rows) expect(w.ui.marks(row)).not.toMatch(/同車頭車號|同車斗車號|同駕駛身分證不同姓名/)
   })
-  r.step('姓名為 {string} 的資料不再標示重複', async (w, name: string) => {
+  r.step('駕駛姓名為 {string} 的資料不再標示重複', async (w, name: string) => {
     await w.ui.goList()
-    expect(w.ui.marks(rowByName(w, name))).not.toMatch(/同車頭|同車尾|同身分證不同姓名/)
+    expect(w.ui.marks(rowByName(w, name))).not.toMatch(/同車頭車號|同車斗車號|同駕駛身分證不同姓名/)
   })
-  r.step('姓名為 {string} 的資料沒有重複標示', async (w, name: string) => {
+  r.step('駕駛姓名為 {string} 的資料沒有重複標示', async (w, name: string) => {
     await w.ui.goList()
-    expect(w.ui.marks(rowByName(w, name))).not.toMatch(/同車頭|同車尾|同身分證不同姓名/)
+    expect(w.ui.marks(rowByName(w, name))).not.toMatch(/同車頭車號|同車斗車號|同駕駛身分證不同姓名/)
   })
-  r.step('姓名為 {string} 與 {string} 的兩筆資料仍標示為重複，重複種類為「同車頭」', async (w, a: string, b: string) => {
+  r.step('駕駛姓名為 {string} 與 {string} 的兩筆資料仍標示為重複，重複種類為「同車頭車號」', async (w, a: string, b: string) => {
     await w.ui.goList()
     for (const name of [a, b]) {
       const m = w.ui.marks(rowByName(w, name))
-      expect(m).toContain('同車頭')
-      expect(m).not.toContain('同車尾')
-      expect(m).not.toContain('同身分證不同姓名')
+      expect(m).toContain('同車頭車號')
+      expect(m).not.toContain('同車斗車號')
+      expect(m).not.toContain('同駕駛身分證不同姓名')
     }
   })
 
@@ -188,29 +188,29 @@ export function registerDuplicates(r: Reg) {
     await screen.findByText(/目前沒有重複與警示/, undefined, { timeout: 2000 })
     expect(w.ui.anyDuplicateGroups().length + w.ui.idWarningGroups().length).toBe(0)
   })
-  r.step('總覽列出 {int} 組「同車頭」重複，值為 {string}', async (w, n: number, value: string) => {
-    await expectGroups(w, '同車頭', n, { value })
+  r.step('總覽列出 {int} 組「同車頭車號」重複，值為 {string}', async (w, n: number, value: string) => {
+    await expectGroups(w, '同車頭車號', n, { value })
   })
-  r.step('總覽列出 {int} 筆身分證格式警示，涉及姓名 {string}', async (w, n: number, name: string) => {
-    await screen.findAllByRole('group', { name: /^身分證警示 / }, { timeout: 2000 })
+  r.step('總覽列出 {int} 筆駕駛身分證格式警示，涉及駕駛姓名 {string}', async (w, n: number, name: string) => {
+    await screen.findAllByRole('group', { name: /^駕駛身分證警示 / }, { timeout: 2000 })
     const groups = w.ui.idWarningGroups()
     expect(groups).toHaveLength(n)
     expect(groups[0]!.getAttribute('aria-label') ?? norm(groups[0]!.textContent)).toContain(name)
   })
-  r.step('重複與警示總覽列出 {int} 組「同車頭」重複', async (w, n: number) => {
+  r.step('重複與警示總覽列出 {int} 組「同車頭車號」重複', async (w, n: number) => {
     await w.ui.goOverview()
-    await expectGroups(w, '同車頭', n, {})
+    await expectGroups(w, '同車頭車號', n, {})
   })
-  r.step('重複與警示總覽列出 {int} 組「同車頭」重複，涉及 {int} 筆資料', async (w, n: number, size: number) => {
+  r.step('重複與警示總覽列出 {int} 組「同車頭車號」重複，涉及 {int} 筆資料', async (w, n: number, size: number) => {
     await w.ui.goOverview()
-    await expectGroups(w, '同車頭', n, { size })
+    await expectGroups(w, '同車頭車號', n, { size })
   })
   r.step(
-    '重複與警示總覽列出 {int} 組「同車頭」重複，涉及 {int} 筆資料，沒有「同身分證不同姓名」',
+    '重複與警示總覽列出 {int} 組「同車頭車號」重複，涉及 {int} 筆資料，沒有「同駕駛身分證不同姓名」',
     async (w, n: number, size: number) => {
       await w.ui.goOverview()
-      await expectGroups(w, '同車頭', n, { size })
-      expect(w.ui.duplicateGroups('同身分證不同姓名')).toHaveLength(0)
+      await expectGroups(w, '同車頭車號', n, { size })
+      expect(w.ui.duplicateGroups('同駕駛身分證不同姓名')).toHaveLength(0)
     },
   )
   r.step('重複與警示總覽不再列出「{any}」重複', async (w, label: string) => {

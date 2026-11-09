@@ -11,7 +11,7 @@ import { previewImport } from '../../src/data/importer'
 import type { ReadResult } from '../../src/data/types'
 import { utf8 } from '../support/csvFixture'
 
-const H = '車頭,車尾,姓名,身分證'
+const H = '車頭車號,車斗車號,駕駛姓名,駕駛身分證'
 const rowsOf = (r: ReadResult) => {
   if (!r.ok) throw new Error(`預期可讀，實際 ${r.code}`)
   return r.rows
@@ -141,13 +141,13 @@ describe('detectFormat／readImportFile：編碼與檔案形狀', () => {
     expect(read('今天開會決議：\n1. 車輛盤點\n')).toEqual({
       ok: false,
       code: 'MISSING_HEADERS',
-      missing: ['車頭', '車尾', '姓名', '身分證'],
+      missing: ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證'],
     })
   })
 
   it('缺一個標題 → MISSING_HEADERS 只列缺的；標題大小寫／全形逗號不當分隔', () => {
-    expect(read('車頭,車尾,姓名\r\nA-1,B-1,王\r\n')).toEqual({ ok: false, code: 'MISSING_HEADERS', missing: ['身分證'] })
-    expect(read('車頭，車尾，姓名，身分證\r\n')).toMatchObject({ ok: false, code: 'MISSING_HEADERS' }) // 全形逗號不是分隔
+    expect(read('車頭車號,車斗車號,駕駛姓名\r\nA-1,B-1,王\r\n')).toEqual({ ok: false, code: 'MISSING_HEADERS', missing: ['駕駛身分證'] })
+    expect(read('車頭車號，車斗車號，駕駛姓名，駕駛身分證\r\n')).toMatchObject({ ok: false, code: 'MISSING_HEADERS' }) // 全形逗號不是分隔
   })
 
   it('以 Uint8Array 視圖（byteOffset ≠ 0、底層 buffer 較大）與 ArrayBuffer 傳入，結果一致', () => {
@@ -182,7 +182,7 @@ describe('readImportFile：CSV 列規則（gridToRawRows）', () => {
     for (const tail of ['', '\r\n', '\r\n\r\n', '\n\n\n']) expect(rowsOf(read(`${H}\r\n${A}${tail}`))).toHaveLength(1)
   })
 
-  it('引號內換行的姓名：一筆記錄、換行原樣保留、fileRow 以記錄序號計（不是文字行號）', () => {
+  it('引號內換行的駕駛姓名：一筆記錄、換行原樣保留、fileRow 以記錄序號計（不是文字行號）', () => {
     const rows = rowsOf(read(`${H}\r\nA-1,B-1,"王\r\n小明",A123456789\r\nC-3,D-3,李,F131104093\r\n`))
     expect(rows.map((r) => r.cells.ownerName)).toEqual(['王\r\n小明', '李'])
     expect(rows.map((r) => r.fileRow)).toEqual([2, 3])
@@ -210,7 +210,7 @@ describe('readImportFile：CSV 列規則（gridToRawRows）', () => {
     expect(read(`\r\n\r\n${H}\r\n${A}\r\n`)).toEqual({
       ok: false,
       code: 'MISSING_HEADERS',
-      missing: ['車頭', '車尾', '姓名', '身分證'],
+      missing: ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證'],
     })
   })
   // 註：契約 §3.5.1 規則 1 正文仍寫「第一個非空白列」，與附錄 Q-E 矛盾（文件過期，實作依附錄）。已列入回報。
@@ -222,7 +222,7 @@ describe('readImportFile：CSV 列規則（gridToRawRows）', () => {
   })
 
   it('標題順序不拘、有多餘欄、重複標題取最左；標題前後空白（含 NBSP、全形空白）被 trim', () => {
-    const rows = rowsOf(read(' 身分證 ,備註,\u00A0姓名\u3000,車尾,車頭,車頭\r\nA123456789,x,王,B-1,A-1,IGNORED\r\n'))
+    const rows = rowsOf(read(' 駕駛身分證 ,備註,\u00A0駕駛姓名\u3000,車斗車號,車頭車號,車頭車號\r\nA123456789,x,王,B-1,A-1,IGNORED\r\n'))
     expect(rows[0].cells).toEqual({ headPlate: 'A-1', tailPlate: 'B-1', ownerName: '王', idNumber: 'A123456789' })
   })
 
@@ -242,8 +242,8 @@ describe('readImportFile：CSV 列規則（gridToRawRows）', () => {
   })
 
   it('分號、Tab 分隔不會被偵測（契約：只認逗號）→ 缺標題', () => {
-    expect(read('車頭;車尾;姓名;身分證\r\n')).toMatchObject({ ok: false, code: 'MISSING_HEADERS' })
-    expect(read('車頭\t車尾\t姓名\t身分證\r\n')).toMatchObject({ ok: false, code: 'MISSING_HEADERS' })
+    expect(read('車頭車號;車斗車號;駕駛姓名;駕駛身分證\r\n')).toMatchObject({ ok: false, code: 'MISSING_HEADERS' })
+    expect(read('車頭車號\t車斗車號\t駕駛姓名\t駕駛身分證\r\n')).toMatchObject({ ok: false, code: 'MISSING_HEADERS' })
   })
 
   it('格式錯誤的列照常讀出，錯誤留給預覽分類：短列→REQUIRED、全形車牌→PLATE_FULLWIDTH', async () => {

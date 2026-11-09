@@ -18,7 +18,7 @@ export function registerCommon(r: Reg) {
   r.step('名單是空的', async (w) => {
     await w.freshDb()
   })
-  r.step('名單上有一筆資料：車頭 {string}、車尾 {string}、姓名 {string}、身分證 {string}', async (w, h, t, n, i) => {
+  r.step('名單上有一筆資料：車頭車號 {string}、車斗車號 {string}、駕駛姓名 {string}、駕駛身分證 {string}', async (w, h, t, n, i) => {
     await w.freshDb()
     await w.seed([fields(h, t, n, i)])
   })
@@ -52,52 +52,52 @@ export function registerCommon(r: Reg) {
     })
   }
 
-  // ── 依姓名查資料（匯入結果檢查）──
-  r.step('名單上有姓名 {string} 的資料', async (_w, name: string) => {
-    expect((await listRecords()).filter((x) => x.ownerName === name).length, `姓名 ${name} 的資料筆數`).toBeGreaterThan(0)
+  // ── 依駕駛姓名查資料（匯入結果檢查）──
+  r.step('名單上有駕駛姓名 {string} 的資料', async (_w, name: string) => {
+    expect((await listRecords()).filter((x) => x.ownerName === name).length, `駕駛姓名 ${name} 的資料筆數`).toBeGreaterThan(0)
   })
-  r.step('名單上有姓名 {string} 的資料，其車頭是 {string}', async (_w, name: string, head: string) => {
+  r.step('名單上有駕駛姓名 {string} 的資料，其車頭車號是 {string}', async (_w, name: string, head: string) => {
     const hits = (await listRecords()).filter((x) => x.ownerName === name)
     expect(hits.map((x) => x.headPlate)).toContain(head)
   })
   r.step(
-    '名單上有姓名 {string} 的資料，其車頭是 {string}、車尾是 {string}、身分證是 {string}',
+    '名單上有駕駛姓名 {string} 的資料，其車頭車號是 {string}、車斗車號是 {string}、駕駛身分證是 {string}',
     async (_w, name: string, head: string, tail: string, id: string) => {
       const hits = (await listRecords()).filter((x) => x.ownerName === name).map(stripId)
       expect(hits).toContainEqual(fields(head, tail, name, id))
     },
   )
   r.step(
-    '名單上姓名為文字 {string} 的資料，其車頭是 {string}、車尾是 {string}',
+    '名單上駕駛姓名為文字 {string} 的資料，其車頭車號是 {string}、車斗車號是 {string}',
     async (_w, name: string, head: string, tail: string) => {
       const hits = (await listRecords()).filter((x) => x.ownerName === name)
       expect(hits.map((x) => [x.headPlate, x.tailPlate])).toContainEqual([head, tail])
     },
   )
-  r.step('名單上沒有姓名 {string} 的資料', async (_w, name: string) => {
+  r.step('名單上沒有駕駛姓名 {string} 的資料', async (_w, name: string) => {
     expect((await listRecords()).filter((x) => x.ownerName === name)).toHaveLength(0)
   })
-  r.step('名單上沒有姓名為 {string} 的資料', async (_w, name: string) => {
+  r.step('名單上沒有駕駛姓名為 {string} 的資料', async (_w, name: string) => {
     expect((await listRecords()).filter((x) => x.ownerName === name)).toHaveLength(0)
   })
-  r.step('名單上沒有姓名 {string} 與 {string} 的資料', async (_w, a: string, b: string) => {
+  r.step('名單上沒有駕駛姓名 {string} 與 {string} 的資料', async (_w, a: string, b: string) => {
     const names = (await listRecords()).map((x) => x.ownerName)
     expect(names).not.toContain(a)
     expect(names).not.toContain(b)
   })
-  for (const p of ['名單上姓名為 {string} 的資料只有 {int} 筆', '名單上姓名為 {string} 的資料有 {int} 筆']) {
+  for (const p of ['名單上駕駛姓名為 {string} 的資料只有 {int} 筆', '名單上駕駛姓名為 {string} 的資料有 {int} 筆']) {
     r.step(p, async (_w, name: string, n: number) => {
       expect((await listRecords()).filter((x) => x.ownerName === name)).toHaveLength(n)
     })
   }
-  // numeric cell 情境：整份名單只有這一筆，姓名必須是「文字」顯示值（007 不可變成 7）
-  r.step('這筆資料的姓名是文字 {string}', async (_w, name: string) => {
+  // numeric cell 情境：整份名單只有這一筆，駕駛姓名必須是「文字」顯示值（007 不可變成 7）
+  r.step('這筆資料的駕駛姓名是文字 {string}', async (_w, name: string) => {
     const all = await listRecords()
     expect(all).toHaveLength(1)
     expect(all[0]!.ownerName).toBe(name)
     expect(typeof all[0]!.ownerName).toBe('string')
   })
-  r.step('新匯入的資料姓名依序為 {any}', async (w, list: string) => {
+  r.step('新匯入的資料駕駛姓名依序為 {any}', async (w, list: string) => {
     const before = w.previewBefore ?? []
     const maxId = Math.max(0, ...before.map((x) => x.id))
     const added = (await listRecords()).filter((x) => x.id > maxId).map((x) => x.ownerName)

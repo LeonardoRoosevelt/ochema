@@ -50,7 +50,7 @@ function must(cond, msg) {
 
 // ───────────────────────── 測試資料 ─────────────────────────
 const LETTER = { A: 10, B: 11, C: 12, D: 13, E: 14, F: 15, G: 16, H: 17, I: 34, J: 18, K: 19, L: 20, M: 21, N: 22, O: 35, P: 23, Q: 24, R: 25, S: 26, T: 27, U: 28, V: 29, W: 32, X: 30, Y: 31, Z: 33 }
-/** 依與 src/data/validation.ts 相同的檢查碼規則補出第 10 碼，得到一組檢查碼正確的身分證。 */
+/** 依與 src/data/validation.ts 相同的檢查碼規則補出第 10 碼，得到一組檢查碼正確的駕駛身分證。 */
 function validId(letter, eight) {
   const n = LETTER[letter]
   const w = [8, 7, 6, 5, 4, 3, 2, 1]
@@ -65,14 +65,14 @@ const R3 = { head: '111-AA', tail: '22-BB', name: '陳小美', id: 'A123456788' 
 const R4 = { head: '555-ZZ', tail: '66-Y', name: '趙刪除', id: validId('C', '34567890') }
 const R5 = { head: '888-QQ', tail: '12-AB', name: '離線新增', id: validId('D', '45678901') }
 
-const HEADER = ['車頭', '車尾', '姓名', '身分證']
+const HEADER = ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證']
 const IMPORT_ROWS = [
   [R1.head, R1.tail, R1.name, R1.id], // 檔案第 2 列：與既有資料整列相同
   ['777-N1', '88-M2', '新甲', validId('E', '56789012')], // 第 3 列：可新增
   ['777-N1', '88-M2', '新甲', validId('E', '56789012')], // 第 4 列：與第 3 列整列相同
-  [R1.head, '99-Q9', '同車頭乙', validId('F', '67890123')], // 第 5 列：與既有重複（同車頭，非整列相同）
+  [R1.head, '99-Q9', '同車頭車號乙', validId('F', '67890123')], // 第 5 列：與既有重複（同車頭車號，非整列相同）
   ['bad-plate', '12-3', '格式錯誤', validId('G', '78901234')], // 第 6 列：車牌格式錯
-  ['700-P1', '71-R2', '新丙', 'A123456788'], // 第 7 列：可新增，身分證警示
+  ['700-P1', '71-R2', '新丙', 'A123456788'], // 第 7 列：可新增，駕駛身分證警示
 ]
 
 function writeFixtures() {
@@ -240,10 +240,10 @@ async function openAdd(page) {
   return dlg
 }
 async function fillForm(dlg, r) {
-  await dlg.getByRole('textbox', { name: /^車頭/ }).fill(r.head)
-  await dlg.getByRole('textbox', { name: /^車尾/ }).fill(r.tail)
-  await dlg.getByRole('textbox', { name: /^姓名/ }).fill(r.name)
-  await dlg.getByRole('textbox', { name: /^身分證/ }).fill(r.id)
+  await dlg.getByRole('textbox', { name: /^車頭車號/ }).fill(r.head)
+  await dlg.getByRole('textbox', { name: /^車斗車號/ }).fill(r.tail)
+  await dlg.getByRole('textbox', { name: /^駕駛姓名/ }).fill(r.name)
+  await dlg.getByRole('textbox', { name: /^駕駛身分證/ }).fill(r.id)
 }
 async function saveAdd(page, r) {
   const dlg = await openAdd(page)
@@ -309,7 +309,7 @@ async function groupList(browser) {
 
   await step('04', '擋下-欄位錯誤', page, async (s) => {
     const dlg = await openAdd(page)
-    await dlg.getByRole('textbox', { name: /^車頭/ }).fill('abc-1')
+    await dlg.getByRole('textbox', { name: /^車頭車號/ }).fill('abc-1')
     await dlg.getByRole('button', { name: '儲存' }).click()
     const alert = dlg.getByRole('alert')
     await alert.waitFor()
@@ -333,32 +333,32 @@ async function groupList(browser) {
     await dlg.waitFor({ state: 'detached' })
   })
 
-  await step('06', '重複標示-同車頭通知', page, async (s) => {
+  await step('06', '重複標示-同車頭車號通知', page, async (s) => {
     await saveAdd(page, R2)
     await page.getByRole('status', { name: '重複與警示通知' }).waitFor()
     await s.shoot()
     await s.axe('list-notice')
   })
 
-  await step('07', '身分證警示-表單與通知', page, async (s) => {
+  await step('07', '駕駛身分證警示-表單與通知', page, async (s) => {
     const dlg = await openAdd(page)
     await fillForm(dlg, R3)
-    await dlg.getByRole('textbox', { name: /^身分證/ }).blur()
+    await dlg.getByRole('textbox', { name: /^駕駛身分證/ }).blur()
     await dlg.locator('.hint').filter({ hasText: '檢查碼' }).waitFor()
-    await s.shoot('身分證警示-表單', '')
+    await s.shoot('駕駛身分證警示-表單', '')
     await dlg.getByRole('button', { name: '儲存' }).click()
     await dlg.waitFor({ state: 'detached' })
     const notice = page.getByRole('status', { name: '重複與警示通知' })
     await notice.waitFor()
     must((await notice.innerText()).includes('檢查碼'), '通知應含「檢查碼不符」原因')
-    await s.shoot('身分證警示-通知', '-notice')
+    await s.shoot('駕駛身分證警示-通知', '-notice')
   })
 
   await step('08', '總覽', page, async (s) => {
     await saveAdd(page, R4) // 供稍後刪除
     await nav(page, '總覽')
-    await page.getByRole('group', { name: /^同車頭 929-X2/ }).waitFor()
-    await page.getByRole('group', { name: '身分證警示 陳小美' }).waitFor()
+    await page.getByRole('group', { name: /^同車頭車號 929-X2/ }).waitFor()
+    await page.getByRole('group', { name: '駕駛身分證警示 陳小美' }).waitFor()
     await s.shoot()
     await s.axe('overview')
   })
@@ -450,7 +450,7 @@ async function groupExport(browser) {
 async function groupImport(browser, files) {
   const { context, page } = await newGroup(browser, '匯入', SEED3)
   const expect2211 = (ext, stats) =>
-    // 第 7 列身分證 A123456788 與預建 R3（陳小美）相同但姓名不同 → 同身分證不同姓名，歸「與既有重複」
+    // 第 7 列駕駛身分證 A123456788 與預建 R3（陳小美）相同但駕駛姓名不同 → 同駕駛身分證不同姓名，歸「與既有重複」
     must(/可新增 1 筆/.test(stats) && /與既有資料重複 3 筆/.test(stats) && /檔內重複 1 筆/.test(stats) && /格式錯誤 1 筆/.test(stats), `${ext} 預覽統計與預期（1/3/1/1）不符：${stats}`)
 
   await step('17', '匯入-選擇檔案', page, async (s) => {
@@ -500,7 +500,7 @@ async function groupImport(browser, files) {
     await res.waitFor()
     const text = (await res.innerText()).replace(/\s+/g, ' ')
     s.note(text)
-    must(/已匯入 3 筆/.test(text) && /略過 2 筆/.test(text), `預期照樣匯入 3 筆（第 3 列新增＋第 5 列同車頭＋第 7 列同身分證不同姓名）、略過 2 筆（整列相同 2 列），實得：${text}`)
+    must(/已匯入 3 筆/.test(text) && /略過 2 筆/.test(text), `預期照樣匯入 3 筆（第 3 列新增＋第 5 列同車頭車號＋第 7 列同駕駛身分證不同姓名）、略過 2 筆（整列相同 2 列），實得：${text}`)
     await s.shoot()
     await s.axe('import-result')
   })
@@ -608,7 +608,7 @@ async function themedGroup(browser, key, label, opts) {
   })
   await step(id('2'), `${label}-總覽`, page, async (s) => {
     await nav(page, '總覽')
-    await page.getByRole('group', { name: '身分證警示 陳小美' }).waitFor()
+    await page.getByRole('group', { name: '駕駛身分證警示 陳小美' }).waitFor()
     await s.shoot()
     await s.axe(`overview-${key}`)
   })

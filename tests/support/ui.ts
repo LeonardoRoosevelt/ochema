@@ -10,23 +10,23 @@
  *  S1 名單
  *    - textbox「查詢」（關鍵字）；有關鍵字時出現 button「清除關鍵字」；查無結果時另有同名按鈕。
  *    - 名單本體為 table「車輛所屬名單」：第 1 列為 columnheader；之後每筆一個 row，
- *      cell 依序為 車頭、車尾、姓名、身分證、標示、操作。前四格文字就是值（完整、未遮罩）。
- *      「標示」格含重複種類文字（同車頭／同車尾／同身分證不同姓名）與身分證警示文字「身分證警示：<原因>」。
+ *      cell 依序為 車頭車號、車斗車號、駕駛姓名、駕駛身分證、標示、操作。前四格文字就是值（完整、未遮罩）。
+ *      「標示」格含重複種類文字（同車頭車號／同車斗車號／同駕駛身分證不同姓名）與駕駛身分證警示文字「駕駛身分證警示：<原因>」。
  *      「操作」格有 button「編輯…」「刪除…」（名稱以此二字開頭，可帶車牌等識別）。
  *    - 空名單（0 筆且無查詢）：文字「名單目前沒有資料」＋ button「新增第一筆」「匯入 Excel」，且沒有 table。
  *    - 有查詢但 0 筆：文字「查無符合的資料」。
  *    - button「新增資料」開啟 S2。
  *    - C2 常駐說明含「資料只存在這台裝置上」「定期匯出 Excel」。
- *  S2 表單：form 名稱「新增資料」或「編輯資料」；textbox 名稱以「車頭」「車尾」「姓名」「身分證」開頭；
+ *  S2 表單：form 名稱「新增資料」或「編輯資料」；textbox 名稱以「車頭車號」「車斗車號」「駕駛姓名」「駕駛身分證」開頭；
  *    button「儲存」「取消」。擋下的訊息放在 role=alert：
- *      必填 →「「姓名」為必填」；車牌 →「車頭 格式不合」＋「只接受大寫英文或數字、以單一連字號相連」；
+ *      必填 →「「駕駛姓名」為必填」；車牌 →「車頭車號 格式不合」＋「只接受大寫英文或數字、以單一連字號相連」；
  *      整列相同 →「與既有資料整列相同，未儲存」＋既有那筆的四欄值。
  *    存檔成功則 form 消失。擋下時 form 保持開啟。
- *  C1 存檔後通知：role=status、名稱「重複與警示通知」，內含重複種類、衝突既有資料的欄位值、身分證警示原因
+ *  C1 存檔後通知：role=status、名稱「重複與警示通知」，內含重複種類、衝突既有資料的欄位值、駕駛身分證警示原因
  *    （例如「檢查碼不符」）；沒有新問題時整個元素不存在。
  *  S3 刪除確認：dialog 名稱「刪除這筆資料？」，內有 button「刪除」「取消」。
- *  S5 總覽（link「總覽」）：每個重複組是 role=group、名稱「<種類> <值>」（如「同車頭 929-X2」），
- *    內文含「涉及 N 筆資料」；每筆身分證警示是 role=group、名稱「身分證警示 <姓名>」，內文含警示原因。
+ *  S5 總覽（link「總覽」）：每個重複組是 role=group、名稱「<種類> <值>」（如「同車頭車號 929-X2」），
+ *    內文含「涉及 N 筆資料」；每筆駕駛身分證警示是 role=group、名稱「駕駛身分證警示 <駕駛姓名>」，內文含警示原因。
  *    無問題時文字「目前沒有重複與警示」。
  *  S6 資料（link「資料」）：radiogroup「匯出格式」內 radio「.xlsx」（預設選取）「.xls」「CSV」；
  *    button「匯出全部…」（名稱以此開頭）；button「匯入 Excel」進入 S4；
@@ -52,10 +52,10 @@ export const NOTICE_NAME = '重複與警示通知'
 const WAIT = { timeout: 2000 }
 
 const FIELD_LABELS: Record<keyof RecordFields, string> = {
-  headPlate: '車頭',
-  tailPlate: '車尾',
-  ownerName: '姓名',
-  idNumber: '身分證',
+  headPlate: '車頭車號',
+  tailPlate: '車斗車號',
+  ownerName: '駕駛姓名',
+  idNumber: '駕駛身分證',
 }
 
 export const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim()
@@ -164,7 +164,7 @@ export class Ui {
       .filter((r) => within(r).queryAllByRole('columnheader').length === 0)
   }
 
-  /** 前六格：車頭、車尾、姓名、身分證、標示、操作 */
+  /** 前六格：車頭車號、車斗車號、駕駛姓名、駕駛身分證、標示、操作 */
   cells(row: HTMLElement): HTMLElement[] {
     return within(row).getAllByRole('cell')
   }
@@ -174,7 +174,7 @@ export class Ui {
     return { headPlate: c[0] ?? '', tailPlate: c[1] ?? '', ownerName: c[2] ?? '', idNumber: c[3] ?? '' }
   }
 
-  /** 標示格文字（重複種類＋身分證警示） */
+  /** 標示格文字（重複種類＋駕駛身分證警示） */
   marks(row: HTMLElement): string {
     return norm(this.cells(row)[4]?.textContent)
   }
@@ -290,11 +290,11 @@ export class Ui {
   }
 
   anyDuplicateGroups(): HTMLElement[] {
-    return screen.queryAllByRole('group', { name: /^同(車頭|車尾|身分證不同姓名) / })
+    return screen.queryAllByRole('group', { name: /^同(車頭車號|車斗車號|駕駛身分證不同姓名) / })
   }
 
   idWarningGroups(): HTMLElement[] {
-    return screen.queryAllByRole('group', { name: /^身分證警示 / })
+    return screen.queryAllByRole('group', { name: /^駕駛身分證警示 / })
   }
 
   // ── 匯出 ────────────────────────────────────────────

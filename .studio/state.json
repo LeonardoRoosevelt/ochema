@@ -8,7 +8,7 @@
   "gates": {
     "A": {
       "status": "passed",
-      "at": "2026-11-09T11:36:19",
+      "at": "2026-11-09T16:01:28",
       "failures": []
     },
     "B": {
@@ -18,20 +18,20 @@
     },
     "C": {
       "status": "passed",
-      "at": "2026-11-09T13:55:41",
+      "at": "2026-11-09T16:23:26",
       "failures": []
     },
     "D": {
       "status": "passed",
-      "at": "2026-11-09T14:54:46",
+      "at": "2026-11-09T16:38:07",
       "failures": []
     }
   },
   "approvals": {
     "A": {
-      "at": "2026-11-09T11:50:16",
-      "note": "使用者重新核可 141 情境（新增 .xls/CSV 匯入、三格式匯出；decisions/B-gate.md）",
-      "fingerprint": "0ecfad7fcc23d8413c54b9493647506a226433e0b296211374ac1e01ac189cf5"
+      "at": "2026-11-09T16:02:10",
+      "note": "使用者核可欄位改名（車頭車號／車斗車號／駕駛姓名／駕駛身分證），142 情境；decisions/rename-fields.md",
+      "fingerprint": "73f725db13748cfb8bcfd8fd95461af4d66254623a77e6332d7d2f49fd302b5c"
     },
     "B": {
       "at": "2026-11-09T11:51:01",
@@ -41,6 +41,6 @@
   },
   "retries": {
     "A": 2,
-    "C": 1
+    "C": 2
   }
 }

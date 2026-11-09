@@ -8,7 +8,7 @@ async function typeKeyword(w: World, keyword: string) {
   await w.ui.search(keyword)
 }
 
-/** 結果的車頭（依畫面順序）應剛好是 heads */
+/** 結果的車頭車號（依畫面順序）應剛好是 heads */
 async function expectHeads(w: World, heads: string[]) {
   await waitFor(() => expect(w.ui.allRowValues().map((v) => v.headPlate)).toEqual(heads), { timeout: 2000 })
 }
@@ -23,14 +23,14 @@ export function registerSearch(r: Reg) {
   r.when('我清除關鍵字', async (w) => {
     await w.ui.clearSearch()
   })
-  r.when('我把車頭 {string} 那筆的姓名改成 {string} 並儲存', async (w, head: string, name: string) => {
+  r.when('我把車頭車號 {string} 那筆的駕駛姓名改成 {string} 並儲存', async (w, head: string, name: string) => {
     w.snapshotBeforeAction = await w.records()
     const target = w.snapshotBeforeAction.find((x) => x.headPlate === head)!
     w.lastAction = { kind: 'edit', id: target.id, input: { ...target, ownerName: name } }
     await w.ui.editRow(w.ui.rowBy('headPlate', head), { ownerName: name })
   })
 
-  r.step('結果列出車頭為 {any} 的資料', async (w, list: string) => expectHeads(w, quoted(list)))
+  r.step('結果列出車頭車號為 {any} 的資料', async (w, list: string) => expectHeads(w, quoted(list)))
   r.step('結果是空的', async (w) => {
     await w.ui.expectRowCount(0)
   })
@@ -41,15 +41,19 @@ export function registerSearch(r: Reg) {
     await w.ui.expectRowCount(n)
     expect(w.ui.searchBox().value, '清除後查詢框應為空').toBe('')
   })
-  r.step('結果中的身分證完整顯示為 {string}', async (w, id: string) => {
+  r.step('結果中的駕駛身分證完整顯示為 {string}', async (w, id: string) => {
     await waitFor(() => expect(w.ui.allRowValues().map((v) => v.idNumber)).toContain(id), { timeout: 2000 })
   })
   r.step('結果仍依 {string} 篩選', async (w, kw: string) => {
     expect(w.ui.searchBox().value, '編輯後查詢條件應保持').toBe(kw)
-    const names = w.ui.allRowValues()
-    expect(names.length).toBeGreaterThan(0)
-    for (const v of names) {
-      expect(Object.values(v).join('｜').toLowerCase(), '每一列都應符合查詢條件').toContain(kw.toLowerCase())
-    }
+    // 篩選有 100ms 防抖（useKeyword.DELAY_MS）；Given 只等輸入框值生效，編輯很快完成時防抖可能尚未套用。
+    // 條件本身不變（每一列都含關鍵字、至少一列），只是等它成立；逾時仍失敗，所以最終畫面仍須是篩選後的結果。
+    await waitFor(() => {
+      const names = w.ui.allRowValues()
+      expect(names.length).toBeGreaterThan(0)
+      for (const v of names) {
+        expect(Object.values(v).join('｜').toLowerCase(), '每一列都應符合查詢條件').toContain(kw.toLowerCase())
+      }
+    }, { timeout: 2000 })
   })
 }

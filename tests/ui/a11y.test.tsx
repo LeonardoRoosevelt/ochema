@@ -50,7 +50,7 @@ describe('發現 2：觸發點消失後焦點不能掉到 <body>', () => {
     render(<App download={() => {}} />)
     fireEvent.click(await screen.findByRole('button', { name: '新增第一筆' }, WAIT))
     const form = await screen.findByRole('form', { name: '新增資料' })
-    for (const [label, value] of [['車頭', 'A1-1'], ['車尾', 'B1-2'], ['姓名', '王'], ['身分證', 'A123456789']] as const) {
+    for (const [label, value] of [['車頭車號', 'A1-1'], ['車斗車號', 'B1-2'], ['駕駛姓名', '王'], ['駕駛身分證', 'A123456789']] as const) {
       fireEvent.change(within(form).getByRole('textbox', { name: new RegExp(`^${label}`) }), { target: { value } })
     }
     fireEvent.click(within(form).getByRole('button', { name: '儲存' }))
@@ -159,12 +159,12 @@ describe('發現 5：表單錯誤摘要不隨輸入變動', () => {
     const before = alert.textContent
     expect(before).toContain('請修正 4 個欄位')
 
-    fireEvent.change(within(form).getByRole('textbox', { name: /^車頭/ }), { target: { value: 'a' } })
-    fireEvent.change(within(form).getByRole('textbox', { name: /^車頭/ }), { target: { value: 'AB' } })
+    fireEvent.change(within(form).getByRole('textbox', { name: /^車頭車號/ }), { target: { value: 'a' } })
+    fireEvent.change(within(form).getByRole('textbox', { name: /^車頭車號/ }), { target: { value: 'AB' } })
     expect(screen.getByRole('alert').textContent).toBe(before) // 摘要維持上次送出的內容
     expect(screen.getByRole('alert')).toBe(alert) // 而且是同一個節點，不是移除重建
 
-    for (const [label, value] of [['車頭', 'A1-1'], ['車尾', 'B1-2'], ['姓名', '王'], ['身分證', 'A123456789']] as const) {
+    for (const [label, value] of [['車頭車號', 'A1-1'], ['車斗車號', 'B1-2'], ['駕駛姓名', '王'], ['駕駛身分證', 'A123456789']] as const) {
       fireEvent.change(within(form).getByRole('textbox', { name: new RegExp(`^${label}`) }), { target: { value } })
     }
     expect(screen.queryByRole('alert')).toBeNull()

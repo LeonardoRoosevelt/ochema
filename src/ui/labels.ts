@@ -3,9 +3,9 @@ import { COLUMN_TITLES, type FieldKey, type IdWarning, type PlateReason, type Ro
 
 export const KIND_LABEL: Record<RowConflictKind, string> = {
   IDENTICAL_ROW: '整列相同',
-  SAME_HEAD: '同車頭',
-  SAME_TAIL: '同車尾',
-  SAME_ID_DIFF_NAME: '同身分證不同姓名',
+  SAME_HEAD: '同車頭車號',
+  SAME_TAIL: '同車斗車號',
+  SAME_ID_DIFF_NAME: '同駕駛身分證不同姓名',
 }
 
 const PLATE_REASON: Record<Exclude<PlateReason, 'REQUIRED'>, string> = {

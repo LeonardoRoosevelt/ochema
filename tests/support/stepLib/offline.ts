@@ -149,7 +149,7 @@ export function registerOffline(r: Reg) {
 
     const bytes = buildFileBytes({
       kind: 'xlsx',
-      headers: ['車頭', '車尾', '姓名', '身分證'],
+      headers: ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證'],
       rows: [['KLP-7988', 'OL-02', '李美玲', 'F131104093']],
     })
     await ui.chooseImportFile(makeFile(bytes, 'journey.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'))

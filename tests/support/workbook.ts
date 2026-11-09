@@ -94,7 +94,7 @@ export const corruptedXlsx = () => Uint8Array.from([0x50, 0x4b, 0x03, 0x04, 1, 2
 export function truncatedXls(): Uint8Array {
   const full = workbookBytes(
     sheetFromGrid([
-      ['車頭', '車尾', '姓名', '身分證'],
+      ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證'],
       ['929-X2', '20-9A', '王小明', 'A123456789'],
     ]),
     'biff8',
@@ -102,7 +102,7 @@ export function truncatedXls(): Uint8Array {
   return full.slice(0, 1024)
 }
 
-export const nulCsv = () => Uint8Array.from([...new TextEncoder().encode('車頭,車尾\r\n929-X2,20-9A'), 0x00, 0x00])
+export const nulCsv = () => Uint8Array.from([...new TextEncoder().encode('車頭車號,車斗車號\r\n929-X2,20-9A'), 0x00, 0x00])
 
 /** Big5 編碼的 CSV；並驗證位元組確實不是合法 UTF-8（否則 fixture 本身失效，直接丟錯）。 */
 export function big5Csv(rows: string[][]): Uint8Array {

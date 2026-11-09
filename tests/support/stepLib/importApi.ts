@@ -35,7 +35,7 @@ function ensureSpec(w: World, kind: FileKind, headers: string[]): FileSpec {
 }
 
 function cellsFor(fileRow: number, h: string, t: string, n: string, i: string, headers: string[]) {
-  return { fileRow, row: rowFor(headers, { 車頭: h, 車尾: t, 姓名: n, 身分證: i }) }
+  return { fileRow, row: rowFor(headers, { 車頭車號: h, 車斗車號: t, 駕駛姓名: n, 駕駛身分證: i }) }
 }
 
 // ── 預覽結果存取 ───────────────────────────────────────
@@ -54,11 +54,11 @@ const fileRowsOf = (p: ImportPreview, category: RowCategory) => p.rows.filter((r
 
 const KIND_BY_LABEL: Record<string, RowConflictKind> = {
   整列相同: 'IDENTICAL_ROW',
-  同車頭: 'SAME_HEAD',
-  同車尾: 'SAME_TAIL',
-  同身分證不同姓名: 'SAME_ID_DIFF_NAME',
+  同車頭車號: 'SAME_HEAD',
+  同車斗車號: 'SAME_TAIL',
+  同駕駛身分證不同姓名: 'SAME_ID_DIFF_NAME',
 }
-/** 「整列相同、同車頭、同車尾」→ ['IDENTICAL_ROW','SAME_HEAD','SAME_TAIL']（順序固定，契約 §3.5 kinds） */
+/** 「整列相同、同車頭車號、同車斗車號」→ ['IDENTICAL_ROW','SAME_HEAD','SAME_TAIL']（順序固定，契約 §3.5 kinds） */
 const kindsOf = (label: string): RowConflictKind[] =>
   label.split('、').map((s) => {
     const k = KIND_BY_LABEL[s.trim()]
@@ -91,33 +91,33 @@ export function registerImportApi(r: Reg) {
   })
   // 單格需要保留前後空白的值，只能寫在引號字串裡（Examples／資料表的儲存格會被修剪）
   r.step(
-    '一份{any}檔，標題列為 {any}，其中第 {int} 列的儲存格內容為：車頭 {string}、車尾 {string}、姓名 {string}、身分證 {string}',
+    '一份{any}檔，標題列為 {any}，其中第 {int} 列的儲存格內容為：車頭車號 {string}、車斗車號 {string}、駕駛姓名 {string}、駕駛身分證 {string}',
     (w, desc: string, headers: string, fileRow: number, h, t, n, i) => {
       const hs = splitHeaders(headers)
       const spec = ensureSpec(w, kindOf(desc), hs)
       spec.rows[fileRow - 2] = cellsFor(fileRow, h, t, n, i, hs).row
     },
   )
-  r.step('第 {int} 列的儲存格內容為：車頭 {string}、車尾 {string}、姓名 {string}、身分證 {string}', (w, fileRow: number, h, t, n, i) => {
+  r.step('第 {int} 列的儲存格內容為：車頭車號 {string}、車斗車號 {string}、駕駛姓名 {string}、駕駛身分證 {string}', (w, fileRow: number, h, t, n, i) => {
     const spec = w.spec!
     spec.rows[fileRow - 2] = cellsFor(fileRow, h, t, n, i, spec.headers).row
   })
   r.step(
-    '一份{any}檔，標題列為 {any}，其中第 {int} 列的「姓名」儲存格是數字 {any}，儲存格格式使它顯示為 {string}，其餘儲存格為文字：車頭 {string}、車尾 {string}、身分證 {string}',
+    '一份{any}檔，標題列為 {any}，其中第 {int} 列的「駕駛姓名」儲存格是數字 {any}，儲存格格式使它顯示為 {string}，其餘儲存格為文字：車頭車號 {string}、車斗車號 {string}、駕駛身分證 {string}',
     (w, desc: string, headers: string, fileRow: number, value: string, display: string, h, t, i) => {
       const hs = splitHeaders(headers)
       const spec = ensureSpec(w, kindOf(desc), hs)
       spec.rows[fileRow - 2] = cellsFor(fileRow, h, t, '', i, hs).row
-      spec.numeric = { rowIndex: fileRow - 2, colIndex: hs.indexOf('姓名'), value: Number(value), display }
+      spec.numeric = { rowIndex: fileRow - 2, colIndex: hs.indexOf('駕駛姓名'), value: Number(value), display }
     },
   )
   r.step(
-    '一份{any}檔，標題列為 {any}，其中第 {int} 列的「車頭」儲存格是數字 {any}，顯示為 {string}，其餘儲存格為文字：車尾 {string}、姓名 {string}、身分證 {string}',
+    '一份{any}檔，標題列為 {any}，其中第 {int} 列的「車頭車號」儲存格是數字 {any}，顯示為 {string}，其餘儲存格為文字：車斗車號 {string}、駕駛姓名 {string}、駕駛身分證 {string}',
     (w, desc: string, headers: string, fileRow: number, value: string, display: string, t, n, i) => {
       const hs = splitHeaders(headers)
       const spec = ensureSpec(w, kindOf(desc), hs)
       spec.rows[fileRow - 2] = cellsFor(fileRow, '', t, n, i, hs).row
-      spec.numeric = { rowIndex: fileRow - 2, colIndex: hs.indexOf('車頭'), value: Number(value), display }
+      spec.numeric = { rowIndex: fileRow - 2, colIndex: hs.indexOf('車頭車號'), value: Number(value), display }
     },
   )
   r.step('一份完全空白的 Excel 檔', (w) => {
@@ -134,28 +134,28 @@ export function registerImportApi(r: Reg) {
     w.rawFile = { bytes: utf8(doc), name: 'minutes.txt' }
   })
   r.step(
-    '一份副檔名是 {any}、但內容是 {any} 的檔案，標題列為 車頭、車尾、姓名、身分證，內容如下：',
+    '一份副檔名是 {any}、但內容是 {any} 的檔案，標題列為 車頭車號、車斗車號、駕駛姓名、駕駛身分證，內容如下：',
     (w, _ext: string, actual: string, table: TableRow[]) => {
       const kind: FileKind = actual.trim() === 'UTF-8 CSV' ? 'csv' : actual.trim() === '.xlsx' ? 'xlsx' : 'xls'
-      const hs = ['車頭', '車尾', '姓名', '身分證']
+      const hs = ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證']
       const spec = ensureSpec(w, kind, hs)
       spec.rows = table.map((row) => rowFor(hs, row))
     },
   )
   // Big5：位元組不是合法 UTF-8（fixture 內會驗證，否則直接丟錯）
   r.step(
-    '一份 Big5 編碼的 CSV 檔，標題列為 車頭、車尾、姓名、身分證，內容為一列資料：車頭 {string}、車尾 {string}、姓名 {string}、身分證 {string}',
+    '一份 Big5 編碼的 CSV 檔，標題列為 車頭車號、車斗車號、駕駛姓名、駕駛身分證，內容為一列資料：車頭車號 {string}、車斗車號 {string}、駕駛姓名 {string}、駕駛身分證 {string}',
     (w, h, t, n, i) => {
       w.spec = undefined
-      w.rawFile = { bytes: big5Csv([['車頭', '車尾', '姓名', '身分證'], [h, t, n, i]]), name: 'big5.csv' }
+      w.rawFile = { bytes: big5Csv([['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證'], [h, t, n, i]]), name: 'big5.csv' }
     },
   )
   r.step(
-    '一份 Big5 編碼的 CSV 檔，標題列為 車頭、車尾、姓名、身分證，資料列的姓名含有中文字，其位元組不是合法的 UTF-8',
+    '一份 Big5 編碼的 CSV 檔，標題列為 車頭車號、車斗車號、駕駛姓名、駕駛身分證，資料列的駕駛姓名含有中文字，其位元組不是合法的 UTF-8',
     (w) => {
       w.spec = undefined
       w.rawFile = {
-        bytes: big5Csv([['車頭', '車尾', '姓名', '身分證'], ['929-X2', '20-9A', '李美玲', 'A123456789']]),
+        bytes: big5Csv([['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證'], ['929-X2', '20-9A', '李美玲', 'A123456789']]),
         name: 'big5.csv',
       }
     },
@@ -241,7 +241,7 @@ export function registerImportApi(r: Reg) {
   r.step('與既有資料重複的是檔案第 {int} 列與第 {int} 列', (w, a: number, b: number) => {
     expect(fileRowsOf(previewOf(w), 'DUP_EXISTING')).toEqual([a, b])
   })
-  r.step('與既有資料重複的是檔案第 {int} 列，重複種類為「{any}」，衝突的既有資料姓名為 {string}', (w, fileRow: number, kinds: string, name: string) => {
+  r.step('與既有資料重複的是檔案第 {int} 列，重複種類為「{any}」，衝突的既有資料駕駛姓名為 {string}', (w, fileRow: number, kinds: string, name: string) => {
     const p = previewOf(w)
     expect(fileRowsOf(p, 'DUP_EXISTING')).toEqual([fileRow])
     const row = rowAt(p, fileRow)
@@ -302,19 +302,19 @@ export function registerImportApi(r: Reg) {
     }
     await restore(snapshot)
   })
-  r.step('檔案第 {int} 列只是同車頭，不在「整列相同」的列表中', (w, fileRow: number) => {
+  r.step('檔案第 {int} 列只是同車頭車號，不在「整列相同」的列表中', (w, fileRow: number) => {
     const p = previewOf(w)
     expect(p.identicalRows).not.toContain(fileRow)
     const row = rowAt(p, fileRow)
     expect(row.kinds).toContain('SAME_HEAD')
     expect(row.kinds).not.toContain('IDENTICAL_ROW')
   })
-  r.step('預覽中這筆的車頭是 {string}、車尾是 {string}', (w, h: string, t: string) => {
+  r.step('預覽中這筆的車頭車號是 {string}、車斗車號是 {string}', (w, h: string, t: string) => {
     const p = previewOf(w)
     expect(p.rows).toHaveLength(1)
     expect(p.rows[0]!.fields).toMatchObject({ headPlate: h, tailPlate: t })
   })
-  r.step('預覽對檔案第 {int} 列顯示身分證格式警示', (w, fileRow: number) => {
+  r.step('預覽對檔案第 {int} 列顯示駕駛身分證格式警示', (w, fileRow: number) => {
     expect(rowAt(previewOf(w), fileRow).idWarning).toBeDefined()
   })
   r.step('預覽告知檔案內沒有可匯入的資料', (w) => {
@@ -336,7 +336,11 @@ export function registerImportApi(r: Reg) {
   r.step('預覽不接受這份檔案，並告知檔案無法讀取', rejected('UNREADABLE'))
   r.step('預覽不接受這份檔案，並指出缺少欄位標題「{any}」', (w, title: string) => {
     expect(w.preview).toMatchObject({ ok: false, code: 'MISSING_HEADERS' })
-    expect((w.preview as { missing: string[] }).missing).toContain(title)
+    // 「A」、「B」…：多個標題時，missing 必須恰為這些（不多不少）
+    const titles = title.split('」、「')
+    const missing = (w.preview as { missing: string[] }).missing
+    for (const t of titles) expect(missing).toContain(t)
+    if (titles.length > 1) expect([...missing].sort()).toEqual([...titles].sort())
   })
   r.step('預覽提示請以「CSV UTF-8」格式另存後再匯入', (w) => {
     expect(w.preview).toMatchObject({ ok: false, code: 'UNREADABLE', hint: 'SAVE_AS_CSV_UTF8' })

@@ -11,7 +11,7 @@ const raw = (fileRow: number, fields: RecordFields): RawRow => ({ fileRow, cells
 const rec = (id: number, fields: RecordFields): VehicleRecord => ({ id, ...fields })
 
 describe('buildPreview：格式錯誤列不參與比對（契約 §3.5 分類演算法第 1 點）', () => {
-  it('格式錯誤的列不當「較前面的列」：後面同車頭的有效列仍是 NEW', () => {
+  it('格式錯誤的列不當「較前面的列」：後面同車頭車號的有效列仍是 NEW', () => {
     const p = buildPreview(
       [raw(2, f('929-X2', 'bad-tail', '王小明')), raw(3, f('929-X2', '20-9A', '李美玲', 'F131104093'))],
       [],
@@ -28,7 +28,7 @@ describe('buildPreview：格式錯誤列不參與比對（契約 §3.5 分類演
     expect(p.identicalRows).toEqual([])
   })
 
-  it('格式錯誤列不計算身分證警示與重複種類，error 取第一個不合的欄位', () => {
+  it('格式錯誤列不計算駕駛身分證警示與重複種類，error 取第一個不合的欄位', () => {
     const p = buildPreview([raw(2, f('929X2', 'bad', '王小明', 'xx'))], [rec(1, f('929X2', 'bad', 'A', 'xx'))])
     const row = p.rows[0]!
     expect(row.category).toBe('FORMAT_ERROR')
@@ -39,10 +39,10 @@ describe('buildPreview：格式錯誤列不參與比對（契約 §3.5 分類演
 })
 
 describe('buildPreview：kinds 固定順序 IDENTICAL_ROW, SAME_HEAD, SAME_TAIL, SAME_ID_DIFF_NAME', () => {
-  it('與不同的既有資料分別撞車頭、車尾、身分證時，順序不受既有資料順序影響', () => {
+  it('與不同的既有資料分別撞車頭車號、車斗車號、駕駛身分證時，順序不受既有資料順序影響', () => {
     const existing = [
-      rec(1, f('X-1', 'T-1', '甲', 'F131104093')), // 撞身分證（異名）
-      rec(2, f('H-1', 'X-2', '乙', 'A800000014')), // 撞車尾
+      rec(1, f('X-1', 'T-1', '甲', 'F131104093')), // 撞駕駛身分證（異名）
+      rec(2, f('H-1', 'X-2', '乙', 'A800000014')), // 撞車斗車號
       rec(3, f('H-9', 'T-9', '丙', 'B900000017')),
     ]
     const p = buildPreview([raw(2, f('H-9', 'X-2', '丁', 'F131104093'))], existing)
@@ -72,7 +72,7 @@ describe('commitImport', () => {
     await resetDbForTest()
   })
 
-  const csv = (...lines: string[]) => new TextEncoder().encode(['車頭,車尾,姓名,身分證', ...lines].join('\r\n') + '\r\n')
+  const csv = (...lines: string[]) => new TextEncoder().encode(['車頭車號,車斗車號,駕駛姓名,駕駛身分證', ...lines].join('\r\n') + '\r\n')
 
   it('預覽後名單已變：提交時以目前名單重算，新出現的整列相同不會被匯入', async () => {
     const p = await previewImport(csv('929-X2,20-9A,王小明,A123456789', 'KLP-7988,OL-02,李美玲,F131104093'))

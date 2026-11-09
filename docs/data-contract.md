@@ -30,7 +30,7 @@ ochema 沒有後端、沒有 HTTP。這份文件定義的是「資料層模組 A
 // ── 欄位 ──────────────────────────────────────────────
 export type FieldKey = 'headPlate' | 'tailPlate' | 'ownerName' | 'idNumber'
 /** Excel 標題與畫面名稱 */
-export const COLUMN_TITLES = { headPlate: '車頭', tailPlate: '車尾', ownerName: '姓名', idNumber: '身分證' } as const
+export const COLUMN_TITLES = { headPlate: '車頭車號', tailPlate: '車斗車號', ownerName: '駕駛姓名', idNumber: '駕駛身分證' } as const
 /** 欄位順序：匯出欄序、格式錯誤時「取第一個不合的欄位」的順序 */
 export const FIELD_ORDER: readonly FieldKey[] = ['headPlate', 'tailPlate', 'ownerName', 'idNumber']
 
@@ -46,7 +46,7 @@ export type IdWarning =
   | 'ID_NON_DIGIT' | 'ID_CHECKSUM'                                                        // 優先序由左至右
 
 // ── 重複種類 ──────────────────────────────────────────
-export type DuplicateKind = 'SAME_HEAD' | 'SAME_TAIL' | 'SAME_ID_DIFF_NAME'  // 同車頭／同車尾／同身分證不同姓名（只通知）
+export type DuplicateKind = 'SAME_HEAD' | 'SAME_TAIL' | 'SAME_ID_DIFF_NAME'  // 同車頭車號／同車斗車號／同駕駛身分證不同姓名（只通知）
 /** 僅匯入預覽使用；手動新增／編輯遇到 IDENTICAL_ROW 是「擋下」而不是通知 */
 export type RowConflictKind = 'IDENTICAL_ROW' | DuplicateKind                  // 整列相同
 ```
@@ -70,7 +70,7 @@ export type RowConflictKind = 'IDENTICAL_ROW' | DuplicateKind                  /
 
 全部不成立即合格，等價於 `^[A-Z0-9]+-[A-Z0-9]+$`。**不自動轉大寫，不做任何正規化。**
 
-#### 身分證 `checkIdNumber`（只警示，不阻擋）
+#### 駕駛身分證 `checkIdNumber`（只警示，不阻擋）
 
 trim 後：空字串 → `REQUIRED`（必填，擋下，屬記錄層而非警示）。否則依序取第一個成立者：
 
@@ -85,7 +85,7 @@ trim 後：空字串 → `REQUIRED`（必填，擋下，屬記錄層而非警示
 
 檢查碼：首碼字母對應 n（A10 B11 C12 D13 E14 F15 G16 H17 I34 J18 K19 L20 M21 N22 O35 P23 Q24 R25 S26 T27 U28 V29 W32 X30 Y31 Z33）；`sum = ⌊n/10⌋ + (n%10)×9 + Σ d[i]×w[i]`，`w = [8,7,6,5,4,3,2,1,1]` 對應後 9 碼；`sum % 10 === 0` 為通過。新式居留證（第 2 碼 8、9）套用同一公式。已實測 `A123456789`、`F131104093`、`A800000014`、`B900000017` 通過，`A123456788` 不通過。
 
-#### 姓名
+#### 駕駛姓名
 
 trim 後非空即可；無格式規則（門禁 A 核可）。
 
@@ -111,15 +111,15 @@ if (oldVersion < 1) {
 | `id integer [pk, increment]` | `keyPath: 'id'`、`autoIncrement: true` | `add()` 時不給 id，由 IndexedDB 配發 |
 | `headPlate/tailPlate/ownerName/idNumber` | 物件屬性（camelCase，與 DBML 欄名一致） | `not null`、長度、格式 IndexedDB 不強制，**由 `validation.ts` 在寫入前保證** |
 | `(四欄) [unique]` | 複合 unique index（陣列 keyPath） | 整列相同的最後防線；寫入值已去空白，故「去空白後相同」也被擋 |
-| `headPlate`／`tailPlate`／`idNumber` 單欄索引 | 一般 index | 供「同車頭／同車尾／同身分證」的衝突查找（`index.getAll(value)`） |
+| `headPlate`／`tailPlate`／`idNumber` 單欄索引 | 一般 index | 供「同車頭車號／同車斗車號／同駕駛身分證」的衝突查找（`index.getAll(value)`） |
 
 **DBML 無長度限制**（B-1 建議 1，已於鎖定前修正）：`schema.dbml` 四欄皆為不帶長度的 `varchar`，與 features 一致（無長度規則）。
 
-排序與「第一次出現」：全部依 `id` 升冪（`store.getAll()` 本身即 key 序）。`id` 由 autoIncrement 單調遞增，編輯不改、刪除不重用，所以不需要 `createdAt`。批次匯入在**同一個交易**內依檔案列序逐筆 `add`，故新匯入列的 id 順序＝檔案列序（情境「新匯入的資料姓名依序為…」）。
+排序與「第一次出現」：全部依 `id` 升冪（`store.getAll()` 本身即 key 序）。`id` 由 autoIncrement 單調遞增，編輯不改、刪除不重用，所以不需要 `createdAt`。批次匯入在**同一個交易**內依檔案列序逐筆 `add`，故新匯入列的 id 順序＝檔案列序（情境「新匯入的資料駕駛姓名依序為…」）。
 
 **索引的實際角色**：名單規模小（數百至數千筆），重複偵測與查詢都可在記憶體內做。三個單欄索引用於存檔時以 O(log n) 找衝突，不是效能必需品；複合 unique 才是有行為的約束（擋整列相同）。
 
-**不入庫的衍生資料**：重複種類／群組、身分證警示、總覽。皆在讀取時由 `detectDuplicates`、`checkIdNumber` 對目前名單計算 → 刪除或編輯後標示即時消失、重開 App 後仍在（情境「重複標示在重新開啟 App 後仍在」）不需額外儲存，也不會有不同步。
+**不入庫的衍生資料**：重複種類／群組、駕駛身分證警示、總覽。皆在讀取時由 `detectDuplicates`、`checkIdNumber` 對目前名單計算 → 刪除或編輯後標示即時消失、重開 App 後仍在（情境「重複標示在重新開啟 App 後仍在」）不需額外儲存，也不會有不同步。
 
 **去空白與複合 unique 的先後**：所有欄位先 `trim()` → 再做格式檢查 → 再比對整列相同／寫入。因此 `" 929-X2 "` 與 `"929-X2"` 視為同一值。比對是原樣（`===`），不分大小寫、不做全半形轉換。
 
@@ -149,7 +149,7 @@ export interface RecordValidation {
   errors: Partial<Record<FieldKey, PlateReason | 'REQUIRED'>>
   /** 第一個不合的欄位（依 FIELD_ORDER），匯入用；無錯誤為 undefined */
   firstError?: { field: FieldKey; code: PlateReason | 'REQUIRED' }
-  /** 身分證格式警示；idNumber 為空時不給 */
+  /** 駕駛身分證格式警示；idNumber 為空時不給 */
   idWarning?: IdWarning
 }
 export function validateRecordInput(input: RecordFields): RecordValidation
@@ -160,7 +160,7 @@ export function validateRecordInput(input: RecordFields): RecordValidation
 ```ts
 export interface DuplicateGroup {
   kind: DuplicateKind
-  value: string          // SAME_HEAD→車頭值；SAME_TAIL→車尾值；SAME_ID_DIFF_NAME→身分證值
+  value: string          // SAME_HEAD→車頭車號值；SAME_TAIL→車斗車號值；SAME_ID_DIFF_NAME→駕駛身分證值
   recordIds: number[]    // 涉及的資料，依 id 升冪
 }
 export interface DuplicateReport {
@@ -173,7 +173,7 @@ export function detectDuplicates(records: readonly VehicleRecord[]): DuplicateRe
 export interface DuplicateConflict {
   kind: DuplicateKind
   value: string
-  /** 與候選資料衝突的既有資料（不含候選自己；SAME_ID_DIFF_NAME 只含姓名不同者） */
+  /** 與候選資料衝突的既有資料（不含候選自己；SAME_ID_DIFF_NAME 只含駕駛姓名不同者） */
   records: VehicleRecord[]
 }
 /** 候選資料（已 trim）與名單比對；excludeId 供編輯時排除自己。不含整列相同。 */
@@ -199,9 +199,9 @@ export function noticesForSave(
 
 重複定義（對照 `duplicate-detection.feature`）：
 - `SAME_HEAD`：≥2 筆 `headPlate` 相同。`SAME_TAIL`：≥2 筆 `tailPlate` 相同。
-- `SAME_ID_DIFF_NAME`：同一 `idNumber` 下出現 ≥2 種不同 `ownerName`。同身分證同姓名（一人多車）不算。涉及的資料＝該身分證下的所有筆（含同姓名者）——此情況的範例未涵蓋，見待決問題 Q4。
-- `SAME_ID_DIFF_NAME` 在**編輯**時的邊界（記錄，features 未涵蓋）：通知鍵是 (idNumber, ownerName)。若該身分證底下原本就有 A、B 兩個不同姓名，把 A 改成第三個姓名 C，鍵有變、仍與 B 衝突，會再通知一次。視為「新的一對衝突」，行為可辯護，維持現狀；若使用者認為吵，再改成「該身分證的不同姓名集合沒有新增衝突者不通知」。
-- 一筆資料可同時屬於多種；同種類同值只算一組（三筆共用同一車頭＝1 組、涉及 3 筆）。
+- `SAME_ID_DIFF_NAME`：同一 `idNumber` 下出現 ≥2 種不同 `ownerName`。同駕駛身分證同駕駛姓名（一人多車）不算。涉及的資料＝該駕駛身分證下的所有筆（含同駕駛姓名者）——此情況的範例未涵蓋，見待決問題 Q4。
+- `SAME_ID_DIFF_NAME` 在**編輯**時的邊界（記錄，features 未涵蓋）：通知鍵是 (idNumber, ownerName)。若該駕駛身分證底下原本就有 A、B 兩個不同駕駛姓名，把 A 改成第三個駕駛姓名 C，鍵有變、仍與 B 衝突，會再通知一次。視為「新的一對衝突」，行為可辯護，維持現狀；若使用者認為吵，再改成「該駕駛身分證的不同駕駛姓名集合沒有新增衝突者不通知」。
+- 一筆資料可同時屬於多種；同種類同值只算一組（三筆共用同一車頭車號＝1 組、涉及 3 筆）。
 - 整列相同（`IDENTICAL_ROW`）不是重複種類而是「禁止」：名單中不會出現，故 `detectDuplicates` 不處理它。
 
 ### 3.3 查詢（`search.ts`，純函式）
@@ -221,7 +221,7 @@ export type SaveFailure =
 export interface SaveSuccess {
   ok: true
   record: VehicleRecord                // 已存入（trim 後）
-  idWarning?: IdWarning                // 身分證警示（仍已存檔）
+  idWarning?: IdWarning                // 駕駛身分證警示（仍已存檔）
   notices: DuplicateConflict[]         // 新造成的重複通知；空陣列＝不顯示通知
 }
 export type SaveResult = SaveSuccess | SaveFailure
@@ -260,7 +260,7 @@ export type ImportFormat = 'xlsx' | 'xls' | 'csv'
 export type ReadFailure =
   | { code: 'UNREADABLE'; hint?: 'SAVE_AS_CSV_UTF8' }  // hint 僅在「無 NUL 但不是合法 UTF-8」時給（Big5 等），UI 據此顯示「請以 CSV UTF-8 另存」
   | { code: 'EMPTY_FILE' }                             // 0 位元組、只有 BOM、或沒有任何非空白儲存格
-  | { code: 'MISSING_HEADERS'; missing: string[] }     // 缺少的標題（中文，依 FIELD_ORDER），如 ['身分證']
+  | { code: 'MISSING_HEADERS'; missing: string[] }     // 缺少的標題（中文，依 FIELD_ORDER），如 ['駕駛身分證']
 export function detectFormat(bytes: Uint8Array): { ok: true; format: ImportFormat } | ({ ok: false } & ReadFailure)
 
 // ── 讀檔 ──
@@ -316,7 +316,7 @@ export function commitImport(preview: ImportPreview, mode: ImportMode): Promise<
    - 否則，對「檔內較前面的非格式錯誤列」（不論它們自己被分到哪一類）有任一衝突 → `DUP_IN_FILE`。
    - 否則 → `NEW`。
 3. `identicalTo`：與既有資料或檔內較前面列四欄全同（既有優先）。
-4. 同一人多車（同身分證同姓名）不算衝突。
+4. 同一人多車（同駕駛身分證同駕駛姓名）不算衝突。
 
 由此推得使用者裁決：檔內重複組第一次出現者為 `NEW`；同時與既有及檔內重複者歸 `DUP_EXISTING`；只與 `DUP_EXISTING` 列重複的後面列歸 `DUP_IN_FILE`（A-gate 修訂 3）。
 
@@ -329,7 +329,7 @@ export function commitImport(preview: ImportPreview, mode: ImportMode): Promise<
 | `DUP_EXISTING`／`DUP_IN_FILE`，無 `identicalTo` | 略過 | 匯入 |
 | `FORMAT_ERROR` | 不匯入，計入 `formatErrorsNotImported` | 同左 |
 
-`imported + skipped + formatErrorsNotImported = counts.total`。身分證警示的列照常匯入。「沒有可進行匯入的選項」是 UI 規則，資料層以 `counts.total === 0` 表達（step 以此判斷）。
+`imported + skipped + formatErrorsNotImported = counts.total`。駕駛身分證警示的列照常匯入。「沒有可進行匯入的選項」是 UI 規則，資料層以 `counts.total === 0` 表達（step 以此判斷）。
 
 #### 3.5.1 讀檔規格
 
@@ -358,7 +358,7 @@ export function commitImport(preview: ImportPreview, mode: ImportMode): Promise<
 
 **`gridToRawRows` 規則**（三格式共用；解決 B-1 建議 6）：
 1. **標題列固定為檔案第 1 列**（附錄 Q-E 裁決）。整張表沒有任何 trim 後非空的儲存格→`EMPTY_FILE`（因此「合法但沒有任何儲存格內容」的 .xls／.xlsx、只有空白字元的 CSV 都是 `EMPTY_FILE`）；有內容但第 1 列空白→`MISSING_HEADERS`。
-2. 標題儲存格先 `trim()` 再與 `COLUMN_TITLES` 比對（完全相等，不分全半形）。同一標題出現多次取**最左邊**。四個標題缺任何一個→`MISSING_HEADERS`，`missing` 依 `FIELD_ORDER` 列出（純文字會議紀錄會得到四個全缺，step 只需斷言包含「車頭」）。標題順序不拘、多餘欄忽略。
+2. 標題儲存格先 `trim()` 再與 `COLUMN_TITLES` 比對（完全相等，不分全半形）。同一標題出現多次取**最左邊**。四個標題缺任何一個→`MISSING_HEADERS`，`missing` 依 `FIELD_ORDER` 列出（純文字會議紀錄會得到四個全缺，step 只需斷言包含「車頭車號」）。標題順序不拘、多餘欄忽略。
 3. 標題列之後逐列：**四個對應欄位 trim 後皆空**的列略過（不計入 `counts.total`，也不佔用結果，但列號照算）；多餘欄的內容不影響這個判斷。只含空白的單一欄位不略過整列，由後續視為留空→`REQUIRED`。
 4. 該列比標題列短（CSV 常見）→缺的格視為 `''`；比標題列長→多出的忽略。兩者皆與 .xlsx 一致。
 5. `cells` 保持原樣不 trim（trim 在 `buildPreview`／`validateRecordInput`）。
@@ -393,7 +393,7 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 - 空名單：三種格式都只有標題列（CSV＝BOM＋標題行），可被 `previewImport` 讀回且 `counts.total === 0`。
 - 工作表／檔案只有一份資料集；匯出不含 `id`；匯出再匯入後 id 重新配發，但順序與四欄內容完全還原（三種格式皆然）。
 - 觸發下載（Blob＋`<a download>`，MIME 取 `mimeType`）屬 UI，不在資料層。
-- 已知限制：(a) `.xls` 工作表上限 65,536 列，名單超過時 SheetJS 行為未實測（現實名單規模遠低於此）；(b) CSV 用 Excel 直接開啟後再存檔，Excel 會把 `007` 變成 `7`、把 `=...` 開頭的姓名當公式——這是 Excel 對 CSV 的行為，不是檔案內容的錯；見 §7 待決。
+- 已知限制：(a) `.xls` 工作表上限 65,536 列，名單超過時 SheetJS 行為未實測（現實名單規模遠低於此）；(b) CSV 用 Excel 直接開啟後再存檔，Excel 會把 `007` 變成 `7`、把 `=...` 開頭的駕駛姓名當公式——這是 Excel 對 CSV 的行為，不是檔案內容的錯；見 §7 待決。
 
 ---
 
@@ -476,23 +476,23 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | 合格的車牌格式 | `checkPlate`（純） | vehicle_records |
 | 不合格的車牌格式一律擋下 | `checkPlate`（純） | vehicle_records |
 | 車牌前後空白先去除再檢查 | `checkPlate`（純） | vehicle_records |
-| 身分證前後空白先去除再檢查 | `checkIdNumber`（純） | vehicle_records |
-| 身分證檢查碼正確則不警示 | `checkIdNumber`（純） | vehicle_records |
-| 身分證不合格只警示，不阻擋 | `checkIdNumber`（純；「仍可存檔」＝`status:'warn'`，`createRecord` 不因它拒收） | vehicle_records |
-| 身分證中間含空白只警示，不阻擋 | `checkIdNumber`（純） | vehicle_records |
+| 駕駛身分證前後空白先去除再檢查 | `checkIdNumber`（純） | vehicle_records |
+| 駕駛身分證檢查碼正確則不警示 | `checkIdNumber`（純） | vehicle_records |
+| 駕駛身分證不合格只警示，不阻擋 | `checkIdNumber`（純；「仍可存檔」＝`status:'warn'`，`createRecord` 不因它拒收） | vehicle_records |
+| 駕駛身分證中間含空白只警示，不阻擋 | `checkIdNumber`（純） | vehicle_records |
 
 **duplicate-detection.feature**
 
 | 情境 | 函式 | 表 |
 |---|---|---|
-| 同一車頭出現在多筆資料 | `detectDuplicates`（`listRecords` 供資料） | vehicle_records |
-| 同一車尾出現在多筆資料 | `detectDuplicates` | vehicle_records |
-| 同一身分證對應到不同姓名 | `detectDuplicates` | vehicle_records |
+| 同一車頭車號出現在多筆資料 | `detectDuplicates`（`listRecords` 供資料） | vehicle_records |
+| 同一車斗車號出現在多筆資料 | `detectDuplicates` | vehicle_records |
+| 同一駕駛身分證對應到不同駕駛姓名 | `detectDuplicates` | vehicle_records |
 | 同一人擁有多台車不算重複 | `detectDuplicates` | vehicle_records |
 | 沒有重複的名單 | `detectDuplicates` | vehicle_records |
 | 只有一筆資料時不會與自己重複 | `detectDuplicates` | vehicle_records |
 | 一筆資料同時符合多種重複 | `detectDuplicates`（`byRecordId`） | vehicle_records |
-| 三筆共用同一車頭視為同一組 | `detectDuplicates` | vehicle_records |
+| 三筆共用同一車頭車號視為同一組 | `detectDuplicates` | vehicle_records |
 | 比對為原樣比對，不同的字串不算重複 | `detectDuplicates` | vehicle_records |
 
 **excel-import.feature**
@@ -515,7 +515,7 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | 只含空白的儲存格視為留空 | `previewImport`（`REQUIRED`） | vehicle_records |
 | 數字型儲存格讀取顯示的文字 | `readImportFile`（`cell.w`）、`commitImport` | vehicle_records |
 | 數字型儲存格的值不符車牌格式時為錯誤列 | `readImportFile`、`previewImport` | vehicle_records |
-| 預覽：身分證不合格的列只警示，仍算可新增 | `previewImport`（`idWarning`） | vehicle_records |
+| 預覽：駕駛身分證不合格的列只警示，仍算可新增 | `previewImport`（`idWarning`） | vehicle_records |
 | 預覽：一列同時有格式錯誤與重複時，以格式錯誤為準 | `previewImport`（FORMAT_ERROR 不參與比對） | vehicle_records |
 | 缺少必要的欄位標題時整份檔案不接受 | `readImportFile`（`MISSING_HEADERS`） | vehicle_records |
 | 欄位順序與匯出不同，仍依標題對應 | `readImportFile` | vehicle_records |
@@ -525,12 +525,12 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | 選擇略過重複：與既有資料重複的列不匯入 | `commitImport('SKIP_DUPLICATES')` | vehicle_records |
 | 略過重複：檔內重複組只保留第一次出現的那一列 | `commitImport('SKIP_DUPLICATES')` | vehicle_records |
 | 混合檔案：略過重複與照樣匯入的匯入筆數與保留的列 | `commitImport` 兩種模式、`listRecords`（id 序） | vehicle_records |
-| 選擇照樣匯入：與既有資料的同車頭、同車尾、同身分證不同姓名照樣匯入 | `commitImport('IMPORT_ALL')` | vehicle_records |
-| 選擇照樣匯入：檔內的同車頭、同車尾、同身分證不同姓名兩列都匯入 | `commitImport('IMPORT_ALL')` | vehicle_records |
+| 選擇照樣匯入：與既有資料的同車頭車號、同車斗車號、同駕駛身分證不同姓名照樣匯入 | `commitImport('IMPORT_ALL')` | vehicle_records |
+| 選擇照樣匯入：檔內的同車頭車號、同車斗車號、同駕駛身分證不同姓名兩列都匯入 | `commitImport('IMPORT_ALL')` | vehicle_records |
 | 照樣匯入：與既有資料四欄完全相同的整列不匯入 | `commitImport('IMPORT_ALL')`（`identicalTo`） | vehicle_records |
 | 照樣匯入：檔內四欄完全相同的整列只保留第一列 | `commitImport('IMPORT_ALL')` | vehicle_records |
 | 照樣匯入：格式錯誤的列仍然不匯入 | `commitImport('IMPORT_ALL')` | vehicle_records |
-| 身分證不合格的列在略過重複時照常匯入 | `commitImport('SKIP_DUPLICATES')` | vehicle_records |
+| 駕駛身分證不合格的列在略過重複時照常匯入 | `commitImport('SKIP_DUPLICATES')` | vehicle_records |
 | 預覽後放棄，名單不變 | `previewImport`（唯讀；不呼叫 `commitImport`） | vehicle_records |
 
 **excel-export.feature**
@@ -544,7 +544,7 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | 含重複的名單匯出再匯入，選擇照樣匯入仍能完整還原 | 同上 | vehicle_records |
 | 名單為空時匯出只有標題列的範本檔 | `exportRecords` | vehicle_records |
 | 空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 | `exportRecords`、`previewImport`（`counts.total=0`） | vehicle_records |
-| 含特殊字元的姓名原樣匯出 | `buildExportBytes` | vehicle_records |
+| 含特殊字元的駕駛姓名原樣匯出 | `buildExportBytes` | vehicle_records |
 
 **excel-import.feature — 範圍變更新增（.xls／CSV，17 個 `@api`）**
 
@@ -580,7 +580,7 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | 各格式匯出含重複的名單再匯入，選擇照樣匯入仍能完整還原 | 同上 | vehicle_records |
 | 名單為空時各格式都匯出只有標題列的範本檔 | `exportRecords(fmt)` | vehicle_records |
 | 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 | `exportRecords(fmt)`、`previewImport`（`counts.total=0`） | vehicle_records |
-| 各格式匯出含特殊字元的姓名都原樣保留 | `buildExportBytes(…, fmt)`、`readImportFile`（xls 見 **T2**／**T3**） | vehicle_records |
+| 各格式匯出含特殊字元的駕駛姓名都原樣保留 | `buildExportBytes(…, fmt)`、`readImportFile`（xls 見 **T2**／**T3**） | vehicle_records |
 
 **offline-use.feature（`@api @table:none`，不屬資料層）**
 
@@ -595,11 +595,11 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 
 | Feature／情境 | 依賴函式 | 表 |
 |---|---|---|
-| record-management：新增、必填、空白、小寫車牌、車牌中間空白、前後空白、身分證警示 | `createRecord`（`INVALID`／`idWarning`）、`validateRecordInput` | vehicle_records |
+| record-management：新增、必填、空白、小寫車牌、車牌中間空白、前後空白、駕駛身分證警示 | `createRecord`（`INVALID`／`idWarning`）、`validateRecordInput` | vehicle_records |
 | record-management：編輯、編輯去空白、編輯被擋、放棄修改 | `updateRecord`、`getRecord`（放棄＝不呼叫） | vehicle_records |
 | record-management：刪除、取消刪除 | `deleteRecord`（確認屬 UI） | vehicle_records |
 | record-management：重新開啟後仍在、空狀態 | `listRecords` | vehicle_records |
-| field-validation：名單標示身分證警示、修正後消失 | `checkIdNumber`／`getOverview`（衍生、不入庫） | vehicle_records |
+| field-validation：名單標示駕駛身分證警示、修正後消失 | `checkIdNumber`／`getOverview`（衍生、不入庫） | vehicle_records |
 | duplicate-detection：新增／編輯造成重複並告知種類與衝突資料 | `createRecord`／`updateRecord` 的 `notices` | vehicle_records |
 | duplicate-detection：整列相同擋下（新增、去空白後、編輯） | `createRecord`／`updateRecord` → `IDENTICAL_ROW`＋`existing`；`getOverview().isClean` | vehicle_records |
 | duplicate-detection：不造成重複不通知、編輯不動衝突欄位不誤報 | `noticesForSave`（經 `createRecord`／`updateRecord`） | vehicle_records |
@@ -624,8 +624,8 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | 來源 | 代碼 | 本文件 |
 |---|---|---|
 | field-validation 檔頭（車牌 8 個） | `PLATE_LOWERCASE`、`PLATE_FULLWIDTH`、`PLATE_NO_HYPHEN`、`PLATE_MULTI_HYPHEN`、`PLATE_EMPTY_PART`、`PLATE_INNER_WHITESPACE`、`PLATE_INVALID_CHAR`、`REQUIRED` | `PlateReason`，優先序同註解 |
-| field-validation 檔頭（身分證 6 個） | `ID_CHECKSUM`、`ID_LENGTH`、`ID_LOWERCASE`、`ID_FIRST_NOT_ALPHA`、`ID_NON_DIGIT`、`ID_LEGACY_RESIDENCE` | `IdWarning`，優先序同註解 |
-| duplicate-detection／excel-import | 同車頭／同車尾／同身分證不同姓名／整列相同 | `SAME_HEAD`／`SAME_TAIL`／`SAME_ID_DIFF_NAME`／`IDENTICAL_ROW`（features 內是中文，代碼為本文件命名，工程部可調整，但須一對一） |
+| field-validation 檔頭（駕駛身分證 6 個） | `ID_CHECKSUM`、`ID_LENGTH`、`ID_LOWERCASE`、`ID_FIRST_NOT_ALPHA`、`ID_NON_DIGIT`、`ID_LEGACY_RESIDENCE` | `IdWarning`，優先序同註解 |
+| duplicate-detection／excel-import | 同車頭車號／同車斗車號／同駕駛身分證不同姓名／整列相同 | `SAME_HEAD`／`SAME_TAIL`／`SAME_ID_DIFF_NAME`／`IDENTICAL_ROW`（features 內是中文，代碼為本文件命名，工程部可調整，但須一對一） |
 
 匯入預覽的四類（可新增／與既有重複／檔內重複／格式錯誤）＝`NEW`／`DUP_EXISTING`／`DUP_IN_FILE`／`FORMAT_ERROR`。
 
@@ -645,10 +645,10 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 
 - **Q-A（已結案）**：`schema.dbml` 於門禁 B 鎖定前已移除長度（製片人修正），無待決。
 - **Q-B**：CSV 引號欄沒有收尾（資料被吞掉）時，目前定為 `UNREADABLE`（嚴格）。features 未涵蓋；是否同意？
-- **Q-C**：CSV 匯出的「公式注入」：姓名以 `=`、`+`、`-`、`@` 開頭時，Excel 直接開 CSV 會當公式。features 要求原樣匯出，契約照做不轉義。是否接受此風險（個人離線工具、資料為自己輸入），或允許 CSV 另加單引號前綴（會破壞「原樣還原」）？
+- **Q-C**：CSV 匯出的「公式注入」：駕駛姓名以 `=`、`+`、`-`、`@` 開頭時，Excel 直接開 CSV 會當公式。features 要求原樣匯出，契約照做不轉義。是否接受此風險（個人離線工具、資料為自己輸入），或允許 CSV 另加單引號前綴（會破壞「原樣還原」）？
 - **Q-D**：CSV 用 Excel 直接開啟再存檔會讓前導 0 消失（`007`→`7`）。這是 Excel 行為；UI 是否要在 CSV 匯出旁加一句提示（建議用 .xlsx 或 .xls 保留前導 0）？
 - **Q-E**：標題列「第一個非空白列」而非固定第 1 列（B-1 建議 6 要求寫死）。features 描述為「第一列」，此為對「前面有空白列」情況的延伸；是否同意？
-- **Q4（沿用）**：`SAME_ID_DIFF_NAME` 涉及的資料含該身分證下所有筆（含同姓名者），features 範例未涵蓋；目前採含所有筆。
+- **Q4（沿用）**：`SAME_ID_DIFF_NAME` 涉及的資料含該駕駛身分證下所有筆（含同駕駛姓名者），features 範例未涵蓋；目前採含所有筆。
 - **Q-F**：.xls 匯出超過 65,536 列的行為未定義（現實不會發生）；是否需要上限檢查？建議不做。
 
 

@@ -99,7 +99,7 @@ table.grid{width:100%;border-collapse:collapse}
   .grid.main .c-ops::before{display:none}
   .grid.mini tr{display:block;padding:12px 14px;margin:0 0 10px}
   .grid.mini td{display:block;padding:3px 0}
-  .grid.mini td::before{display:inline-block;min-width:4.5em;margin-right:8px}
+  .grid.mini td::before{display:inline-block;min-width:6em;margin-right:8px}
 }
 
 /* messages */

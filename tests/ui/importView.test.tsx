@@ -40,7 +40,7 @@ async function choose(p: ImportPreview) {
   return (await screen.findByRole('button', { name: '確認匯入' })) as HTMLButtonElement
 }
 
-// 一筆新增 + 一筆同車頭重複（非整列相同）+ 一筆整列相同
+// 一筆新增 + 一筆同車頭車號重複（非整列相同）+ 一筆整列相同
 const withDups = () =>
   preview([
     row(2, 'NEW'),
@@ -68,7 +68,7 @@ describe('匯入確認', () => {
   it('預計匯入筆數：整列相同的列兩種選項都不匯入', () => {
     const p = withDups()
     expect(expectedImports(p, 'SKIP_DUPLICATES')).toBe(1)
-    expect(expectedImports(p, 'IMPORT_ALL')).toBe(2) // 新增 1 + 同車頭 1；整列相同那列不算
+    expect(expectedImports(p, 'IMPORT_ALL')).toBe(2) // 新增 1 + 同車頭車號 1；整列相同那列不算
   })
 
   it('確認時把使用者選的方式交給資料層（照樣匯入 ≠ 略過重複）', async () => {

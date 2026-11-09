@@ -4,10 +4,10 @@
 export type FieldKey = 'headPlate' | 'tailPlate' | 'ownerName' | 'idNumber'
 /** Excel 標題與畫面名稱 */
 export const COLUMN_TITLES = {
-  headPlate: '車頭',
-  tailPlate: '車尾',
-  ownerName: '姓名',
-  idNumber: '身分證',
+  headPlate: '車頭車號',
+  tailPlate: '車斗車號',
+  ownerName: '駕駛姓名',
+  idNumber: '駕駛身分證',
 } as const
 /** 欄位順序：匯出欄序、格式錯誤時「取第一個不合的欄位」的順序 */
 export const FIELD_ORDER: readonly FieldKey[] = ['headPlate', 'tailPlate', 'ownerName', 'idNumber']
@@ -42,7 +42,7 @@ export type IdWarning =
   | 'ID_CHECKSUM'
 
 // ── 重複種類 ──────────────────────────────────────────
-/** 同車頭／同車尾／同身分證不同姓名（只通知） */
+/** 同車頭車號／同車斗車號／同駕駛身分證不同姓名（只通知） */
 export type DuplicateKind = 'SAME_HEAD' | 'SAME_TAIL' | 'SAME_ID_DIFF_NAME'
 /** 僅匯入預覽使用；手動新增／編輯遇到 IDENTICAL_ROW 是「擋下」而不是通知 */
 export type RowConflictKind = 'IDENTICAL_ROW' | DuplicateKind
@@ -61,14 +61,14 @@ export interface RecordValidation {
   errors: Partial<Record<FieldKey, PlateReason | 'REQUIRED'>>
   /** 第一個不合的欄位（依 FIELD_ORDER），匯入用；無錯誤為 undefined */
   firstError?: { field: FieldKey; code: PlateReason | 'REQUIRED' }
-  /** 身分證格式警示；idNumber 為空時不給 */
+  /** 駕駛身分證格式警示；idNumber 為空時不給 */
   idWarning?: IdWarning
 }
 
 // ── 重複偵測（duplicates.ts）──────────────────────────
 export interface DuplicateGroup {
   kind: DuplicateKind
-  /** SAME_HEAD→車頭值；SAME_TAIL→車尾值；SAME_ID_DIFF_NAME→身分證值 */
+  /** SAME_HEAD→車頭車號值；SAME_TAIL→車斗車號值；SAME_ID_DIFF_NAME→駕駛身分證值 */
   value: string
   /** 涉及的資料，依 id 升冪 */
   recordIds: number[]
@@ -82,7 +82,7 @@ export interface DuplicateReport {
 export interface DuplicateConflict {
   kind: DuplicateKind
   value: string
-  /** 與候選資料衝突的既有資料（不含候選自己；SAME_ID_DIFF_NAME 只含姓名不同者） */
+  /** 與候選資料衝突的既有資料（不含候選自己；SAME_ID_DIFF_NAME 只含駕駛姓名不同者） */
   records: VehicleRecord[]
 }
 
@@ -95,7 +95,7 @@ export interface SaveSuccess {
   ok: true
   /** 已存入（trim 後） */
   record: VehicleRecord
-  /** 身分證警示（仍已存檔） */
+  /** 駕駛身分證警示（仍已存檔） */
   idWarning?: IdWarning
   /** 新造成的重複通知；空陣列＝不顯示通知 */
   notices: DuplicateConflict[]

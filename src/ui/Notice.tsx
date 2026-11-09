@@ -55,7 +55,7 @@ export function Notice({ data, onDismiss }: { data: NoticeData; onDismiss: () =>
           <p className="idwarn">
             <IdWarningTag code={idWarning} />
             <span>
-              身分證 <span className="mono">{record.idNumber}</span> 已存入，請再核對一次。
+              駕駛身分證 <span className="mono">{record.idNumber}</span> 已存入，請再核對一次。
             </span>
           </p>
         )}

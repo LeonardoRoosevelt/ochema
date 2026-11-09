@@ -6,12 +6,12 @@ const utf8 = (s: string) => new TextEncoder().encode(s)
 
 describe('parseCsv（契約 §4.2）', () => {
   it('引號欄沒有收尾（直到檔尾）→ 丟 CsvError，不吞資料（Q-B）', () => {
-    expect(() => parseCsv('車頭,車尾\r\n"929-X2,20-9A\r\n')).toThrow(CsvError)
+    expect(() => parseCsv('車頭車號,車斗車號\r\n"929-X2,20-9A\r\n')).toThrow(CsvError)
     expect(() => parseCsv('"')).toThrow(CsvError)
   })
 
   it('readImportFile 把引號未收尾的 CSV 判為 UNREADABLE（不是缺標題、也不是部分匯入）', () => {
-    const text = '車頭,車尾,姓名,身分證\r\n929-X2,20-9A,"王小明,A123456789\r\n'
+    const text = '車頭車號,車斗車號,駕駛姓名,駕駛身分證\r\n929-X2,20-9A,"王小明,A123456789\r\n'
     expect(readImportFile(utf8(text))).toEqual({ ok: false, code: 'UNREADABLE' })
   })
 
@@ -38,7 +38,7 @@ describe('parseCsv（契約 §4.2）', () => {
 
 describe('serializeCsv', () => {
   it('每筆（含最後一筆）都以 CRLF 結尾；一般值不加引號', () => {
-    expect(serializeCsv([['車頭', '車尾'], ['929-X2', '20-9A']])).toBe('車頭,車尾\r\n929-X2,20-9A\r\n')
+    expect(serializeCsv([['車頭車號', '車斗車號'], ['929-X2', '20-9A']])).toBe('車頭車號,車斗車號\r\n929-X2,20-9A\r\n')
   })
 
   it('含逗號、引號、換行或前後空白的值以引號包住，內部引號加倍', () => {

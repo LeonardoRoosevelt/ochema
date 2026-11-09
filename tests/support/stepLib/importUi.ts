@@ -18,9 +18,9 @@ export function registerImportUi(r: Reg) {
     expect((await screen.findAllByText(new RegExp(`可新增\\s*${nNew}\\s*筆`), undefined, { timeout: 2000 })).length).toBeGreaterThan(0)
     expect(screen.getAllByText(new RegExp(`格式錯誤\\s*${nError}\\s*筆`)).length).toBeGreaterThan(0)
 
-    // 錯誤列：檔案中車頭含小寫的那一列（情境固定為 klp-7988），列號 = 資料列序 + 2（標題列為第 1 列）
+    // 錯誤列：檔案中車頭車號含小寫的那一列（情境固定為 klp-7988），列號 = 資料列序 + 2（標題列為第 1 列）
     const spec = w.spec!
-    const headCol = spec.headers.indexOf('車頭')
+    const headCol = spec.headers.indexOf('車頭車號')
     const idx = spec.rows.findIndex((row) => /[a-z]/.test(row[headCol] ?? ''))
     expect(idx, '情境檔案裡應有一列小寫車牌').toBeGreaterThanOrEqual(0)
     const fileRow = idx + 2

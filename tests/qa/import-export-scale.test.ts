@@ -14,7 +14,7 @@ import type { ExportFormat, RawRow, VehicleRecord } from '../../src/data/types'
 import { utf8 } from '../support/csvFixture'
 import { sheetFromGrid, workbookBytes } from '../support/workbook'
 
-const H = ['車頭', '車尾', '姓名', '身分證']
+const H = ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證']
 const FORMATS: ExportFormat[] = ['xlsx', 'xls', 'csv']
 const N = 5000
 
@@ -27,7 +27,7 @@ function bigGrid(n: number, mk: (i: number) => string[]): string[][] {
   return [H, ...Array.from({ length: n }, (_, i) => mk(i))]
 }
 const unique = (i: number) => [`H${i}-A`, `T${i}-B`, `車主${i}😀`, `A${String(i).padStart(9, '0')}`]
-// 身分證每列不同（檢查碼多半不合 → 只警示，不影響匯入），所以不會有 SAME_ID_DIFF_NAME
+// 駕駛身分證每列不同（檢查碼多半不合 → 只警示，不影響匯入），所以不會有 SAME_ID_DIFF_NAME
 
 function bytesOf(fmt: ExportFormat, grid: string[][]): Uint8Array {
   if (fmt === 'csv') {
@@ -64,13 +64,13 @@ describe(`大檔匯入（${N} 列）`, () => {
     expect(prev.ms + commit.ms).toBeLessThan(30_000)
   })
 
-  it('csv 最壞情況：5,000 列全部同車頭（每列都要與前面所有列比對）→ 全是 DUP_IN_FILE（第一列 NEW），耗時在上限內', async () => {
+  it('csv 最壞情況：5,000 列全部同車頭車號（每列都要與前面所有列比對）→ 全是 DUP_IN_FILE（第一列 NEW），耗時在上限內', async () => {
     const grid = bigGrid(N, (i) => ['SAME-1', `T${i}-B`, `車主${i}`, `A${String(i).padStart(9, '0')}`])
-    const prev = await timed('csv previewImport 全同車頭', () => previewImport(bytesOf('csv', grid)))
+    const prev = await timed('csv previewImport 全同車頭車號', () => previewImport(bytesOf('csv', grid)))
     if (!prev.value.ok) throw new Error('預覽應成功')
     expect(prev.value.preview.counts).toEqual({ total: N, new: 1, dupExisting: 0, dupInFile: N - 1, formatError: 0 })
     expect(prev.ms).toBeLessThan(20_000)
-    const commit = await timed('csv commitImport IMPORT_ALL 全同車頭', () => commitImport(prev.value.ok ? prev.value.preview : (undefined as never), 'IMPORT_ALL'))
+    const commit = await timed('csv commitImport IMPORT_ALL 全同車頭車號', () => commitImport(prev.value.ok ? prev.value.preview : (undefined as never), 'IMPORT_ALL'))
     expect(commit.value.imported).toBe(N) // 非整列相同 → 照樣匯入
     expect(commit.ms).toBeLessThan(30_000)
   })
@@ -80,7 +80,7 @@ describe(`大檔匯入（${N} 列）`, () => {
     const grid = bigGrid(N, (i) => {
       if (i % 1000 === 0) return ['bad', `T${i}-B`, `X${i}`, 'A123456789'] // 小寫無連字號 → FORMAT_ERROR（5 列）
       if (i % 1000 === 1) return ['EXIST-1', 'EXIST-2', '既有', 'A123456789'] // 與既有整列相同（5 列）
-      if (i % 1000 === 2) return ['EXIST-1', `T${i}-B`, `Y${i}`, `A${i}`] // 同車頭（5 列）
+      if (i % 1000 === 2) return ['EXIST-1', `T${i}-B`, `Y${i}`, `A${i}`] // 同車頭車號（5 列）
       return unique(i)
     })
     const prev = await previewImport(bytesOf('csv', grid))
@@ -134,7 +134,7 @@ const mkRecords = (): VehicleRecord[] =>
   tricky.map((t, i) => ({ id: i + 1, headPlate: `H${i}-1`, tailPlate: `T${i}-1`, ownerName: t.v, idNumber: i % 2 ? 'A123456789' : 'F131104093' }))
 
 describe('三格式匯出 → 讀回（往返）', () => {
-  it.each(FORMATS)('%s：特殊字元的姓名逐字相同', (fmt) => {
+  it.each(FORMATS)('%s：特殊字元的駕駛姓名逐字相同', (fmt) => {
     const recs = mkRecords()
     const read = readImportFile(buildExportBytes(recs, fmt))
     if (!read.ok) throw new Error(`讀回失敗 ${read.code}`)
@@ -157,7 +157,7 @@ describe('三格式匯出 → 讀回（往返）', () => {
     const prev = await previewImport(out.bytes)
     if (!prev.ok) throw new Error('預覽應成功')
     expect(prev.preview.counts.total).toBe(before.length)
-    // 匯出的資料彼此之間會有「同車頭／同身分證不同姓名」之類的重複 → 用 IMPORT_ALL，整列相同者才會被略過
+    // 匯出的資料彼此之間會有「同車頭車號／同駕駛身分證不同姓名」之類的重複 → 用 IMPORT_ALL，整列相同者才會被略過
     await commitImport(prev.preview, 'IMPORT_ALL')
     const after = (await listRecords()).map(({ id: _id, ...f }) => f)
     expect(after).toEqual(before)
@@ -190,16 +190,16 @@ describe('三格式匯出 → 讀回（往返）', () => {
     expect(read.rows.map((r) => r.cells.headPlate)).toEqual(mkRecords().map((r) => r.headPlate))
   })
 
-  // 缺陷（留紅燈）：契約 §3.6「匯出再匯入…四欄內容完全還原（三種格式皆然）」；實際 .xlsx 把姓名內的 CRLF 讀回成 LF。
+  // 缺陷（留紅燈）：契約 §3.6「匯出再匯入…四欄內容完全還原（三種格式皆然）」；實際 .xlsx 把駕駛姓名內的 CRLF 讀回成 LF。
   // 製片人裁決（C 退回 1）：SheetJS 讀 .xlsx 字串時一律把 CRLF 正規化為 LF，資料層無法修正；
   // 列為已知限制（契約附錄「C 退回 1 修正」）。csv／xls 仍須逐字還原。
-  it.each(FORMATS.filter((f) => f !== 'xlsx'))('%s：姓名內含 CRLF 換行，匯出再讀回逐字相同', (fmt) => {
+  it.each(FORMATS.filter((f) => f !== 'xlsx'))('%s：駕駛姓名內含 CRLF 換行，匯出再讀回逐字相同', (fmt) => {
     const v = '王\r\n小明'
     const read = readImportFile(buildExportBytes([{ id: 1, headPlate: 'A-1', tailPlate: 'B-1', ownerName: v, idNumber: 'A123456789' }], fmt))
     if (!read.ok) throw new Error('讀回失敗')
     expect(JSON.stringify(read.rows[0].cells.ownerName)).toBe(JSON.stringify(v))
   })
-  it('[已知限制] xlsx：姓名內 CRLF 匯出再讀回成為 LF（其餘字元不變）', () => {
+  it('[已知限制] xlsx：駕駛姓名內 CRLF 匯出再讀回成為 LF（其餘字元不變）', () => {
     const read = readImportFile(buildExportBytes([{ id: 1, headPlate: 'A-1', tailPlate: 'B-1', ownerName: '王\r\n小明', idNumber: 'A123456789' }], 'xlsx'))
     if (!read.ok) throw new Error('讀回失敗')
     expect(JSON.stringify(read.rows[0].cells.ownerName)).toBe(JSON.stringify('王\n小明'))
@@ -256,14 +256,14 @@ describe('匯出的上限與極端值', () => {
     expect(csv.ok && csv.rows.length).toBe(70_000)
   })
 
-  it('超長姓名（10 萬字元）：csv 往返不變', () => {
+  it('超長駕駛姓名（10 萬字元）：csv 往返不變', () => {
     const v = '王'.repeat(100_000)
     const read = readImportFile(buildExportBytes([{ id: 1, headPlate: 'A-1', tailPlate: 'B-1', ownerName: v, idNumber: 'A123456789' }], 'csv'))
     expect(read.ok && read.rows[0].cells.ownerName).toBe(v)
   })
 
-  // Excel 單一儲存格上限 32,767 字元；契約沒有姓名長度上限 → 錯誤的行為由下面兩個測試如實記錄
-  it('[特性紀錄] 姓名 32,768 字元（超過 Excel 儲存格上限）匯出 xlsx：記錄是否丟錯', () => {
+  // Excel 單一儲存格上限 32,767 字元；契約沒有駕駛姓名長度上限 → 錯誤的行為由下面兩個測試如實記錄
+  it('[特性紀錄] 駕駛姓名 32,768 字元（超過 Excel 儲存格上限）匯出 xlsx：記錄是否丟錯', () => {
     const rec: VehicleRecord = { id: 1, headPlate: 'A-1', tailPlate: 'B-1', ownerName: 'x'.repeat(32_768), idNumber: 'A123456789' }
     let outcome: string
     try {
@@ -272,12 +272,12 @@ describe('匯出的上限與極端值', () => {
     } catch (e) {
       outcome = `throws:${(e as Error).message}`
     }
-    console.info(`[QA 特性紀錄] xlsx 匯出 32,768 字元姓名 → ${outcome}`)
+    console.info(`[QA 特性紀錄] xlsx 匯出 32,768 字元駕駛姓名 → ${outcome}`)
     // 製片人裁決（C 退回 1）：匯出端以具名錯誤告知、不新增輸入長度規則
     expect(() => buildExportBytes([rec], 'xlsx')).toThrow(CellTooLongError)
     expect(outcome).toMatch(/^throws:.*請改用 CSV/)
   })
-  it.todo('[未定義] 含孤立代理字元（lone surrogate，例如 "\\uD83D"）的姓名：CSV 以 UTF-8 編碼會被換成 U+FFFD，往返不再逐字相同')
+  it.todo('[未定義] 含孤立代理字元（lone surrogate，例如 "\\uD83D"）的駕駛姓名：CSV 以 UTF-8 編碼會被換成 U+FFFD，往返不再逐字相同')
   it.todo('[未定義] CSV 以 Excel 開啟再另存會把 007 變 7、=… 當公式（契約 §3.6 已知限制 b，非檔案內容問題）')
 })
 

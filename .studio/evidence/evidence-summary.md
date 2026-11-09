@@ -1,6 +1,6 @@
 # ochema 證據摘要
 
-- 產生時間：2026-11-09T06:50:24.282Z
+- 產生時間：2026-11-09T08:32:50.278Z
 - 步驟：39 通過／0 失敗（共 39）
 - console error／pageerror：0
 - 對外請求（非 http://127.0.0.1:4173）：0（預期 0）
@@ -23,8 +23,8 @@
 | 03 | 新增成功 | 通過 | [03-新增成功-desktop.png](../../.studio/evidence/screens/03-新增成功-desktop.png)<br>[03-新增成功-mobile.png](../../.studio/evidence/screens/03-新增成功-mobile.png) | seal 動畫：seal 0.5s |
 | 04 | 擋下-欄位錯誤 | 通過 | [04-擋下-欄位錯誤-desktop.png](../../.studio/evidence/screens/04-擋下-欄位錯誤-desktop.png)<br>[04-擋下-欄位錯誤-mobile.png](../../.studio/evidence/screens/04-擋下-欄位錯誤-mobile.png) |  |
 | 05 | 擋下-整列相同 | 通過 | [05-擋下-整列相同-desktop.png](../../.studio/evidence/screens/05-擋下-整列相同-desktop.png)<br>[05-擋下-整列相同-mobile.png](../../.studio/evidence/screens/05-擋下-整列相同-mobile.png) |  |
-| 06 | 重複標示-同車頭通知 | 通過 | [06-重複標示-同車頭通知-desktop.png](../../.studio/evidence/screens/06-重複標示-同車頭通知-desktop.png)<br>[06-重複標示-同車頭通知-mobile.png](../../.studio/evidence/screens/06-重複標示-同車頭通知-mobile.png) |  |
-| 07 | 身分證警示-表單與通知 | 通過 | [07-身分證警示-表單-desktop.png](../../.studio/evidence/screens/07-身分證警示-表單-desktop.png)<br>[07-身分證警示-表單-mobile.png](../../.studio/evidence/screens/07-身分證警示-表單-mobile.png)<br>[07-身分證警示-通知-notice-desktop.png](../../.studio/evidence/screens/07-身分證警示-通知-notice-desktop.png)<br>[07-身分證警示-通知-notice-mobile.png](../../.studio/evidence/screens/07-身分證警示-通知-notice-mobile.png) |  |
+| 06 | 重複標示-同車頭車號通知 | 通過 | [06-重複標示-同車頭車號通知-desktop.png](../../.studio/evidence/screens/06-重複標示-同車頭車號通知-desktop.png)<br>[06-重複標示-同車頭車號通知-mobile.png](../../.studio/evidence/screens/06-重複標示-同車頭車號通知-mobile.png) |  |
+| 07 | 駕駛身分證警示-表單與通知 | 通過 | [07-駕駛身分證警示-表單-desktop.png](../../.studio/evidence/screens/07-駕駛身分證警示-表單-desktop.png)<br>[07-駕駛身分證警示-表單-mobile.png](../../.studio/evidence/screens/07-駕駛身分證警示-表單-mobile.png)<br>[07-駕駛身分證警示-通知-notice-desktop.png](../../.studio/evidence/screens/07-駕駛身分證警示-通知-notice-desktop.png)<br>[07-駕駛身分證警示-通知-notice-mobile.png](../../.studio/evidence/screens/07-駕駛身分證警示-通知-notice-mobile.png) |  |
 | 08 | 總覽 | 通過 | [08-總覽-desktop.png](../../.studio/evidence/screens/08-總覽-desktop.png)<br>[08-總覽-mobile.png](../../.studio/evidence/screens/08-總覽-mobile.png) |  |
 | 09 | 查詢-命中 | 通過 | [09-查詢-命中-desktop.png](../../.studio/evidence/screens/09-查詢-命中-desktop.png)<br>[09-查詢-命中-mobile.png](../../.studio/evidence/screens/09-查詢-命中-mobile.png) |  |
 | 10 | 查詢-無結果 | 通過 | [10-查詢-無結果-desktop.png](../../.studio/evidence/screens/10-查詢-無結果-desktop.png)<br>[10-查詢-無結果-mobile.png](../../.studio/evidence/screens/10-查詢-無結果-mobile.png) |  |
@@ -32,9 +32,9 @@
 | 12 | 刪除完成 | 通過 | [12-刪除完成-desktop.png](../../.studio/evidence/screens/12-刪除完成-desktop.png)<br>[12-刪除完成-mobile.png](../../.studio/evidence/screens/12-刪除完成-mobile.png) | 刪除後 activeElement=h2#list-h.stitle（名單） |
 | 13 | 資料頁 | 通過 | [13-資料頁-desktop.png](../../.studio/evidence/screens/13-資料頁-desktop.png)<br>[13-資料頁-mobile.png](../../.studio/evidence/screens/13-資料頁-mobile.png) |  |
 | 13a | 分頁標題 | 通過 | — | document.title：{"名單":"名單 — ochema","總覽":"總覽 — ochema","資料":"資料 — ochema"}（切換分頁後有改變） |
-| 14 | 匯出-xlsx | 通過 | [14-匯出-xlsx-desktop.png](../../.studio/evidence/screens/14-匯出-xlsx-desktop.png)<br>[14-匯出-xlsx-mobile.png](../../.studio/evidence/screens/14-匯出-xlsx-mobile.png) | ochema-名單-20261109-1449.xlsx（16435 bytes） |
-| 15 | 匯出-xls | 通過 | [15-匯出-xls-desktop.png](../../.studio/evidence/screens/15-匯出-xls-desktop.png)<br>[15-匯出-xls-mobile.png](../../.studio/evidence/screens/15-匯出-xls-mobile.png) | ochema-名單-20261109-1449.xls（4096 bytes） |
-| 16 | 匯出-csv | 通過 | [16-匯出-csv-desktop.png](../../.studio/evidence/screens/16-匯出-csv-desktop.png)<br>[16-匯出-csv-mobile.png](../../.studio/evidence/screens/16-匯出-csv-mobile.png) | ochema-名單-20261109-1450.csv（140 bytes） |
+| 14 | 匯出-xlsx | 通過 | [14-匯出-xlsx-desktop.png](../../.studio/evidence/screens/14-匯出-xlsx-desktop.png)<br>[14-匯出-xlsx-mobile.png](../../.studio/evidence/screens/14-匯出-xlsx-mobile.png) | ochema-名單-20261109-1632.xlsx（16459 bytes） |
+| 15 | 匯出-xls | 通過 | [15-匯出-xls-desktop.png](../../.studio/evidence/screens/15-匯出-xls-desktop.png)<br>[15-匯出-xls-mobile.png](../../.studio/evidence/screens/15-匯出-xls-mobile.png) | ochema-名單-20261109-1632.xls（4096 bytes） |
+| 16 | 匯出-csv | 通過 | [16-匯出-csv-desktop.png](../../.studio/evidence/screens/16-匯出-csv-desktop.png)<br>[16-匯出-csv-mobile.png](../../.studio/evidence/screens/16-匯出-csv-mobile.png) | ochema-名單-20261109-1632.csv（164 bytes） |
 | 17 | 匯入-選擇檔案 | 通過 | [17-匯入-選擇檔案-desktop.png](../../.studio/evidence/screens/17-匯入-選擇檔案-desktop.png)<br>[17-匯入-選擇檔案-mobile.png](../../.studio/evidence/screens/17-匯入-選擇檔案-mobile.png) |  |
 | 18 | 匯入預覽-xls | 通過 | [18-匯入預覽-xls-desktop.png](../../.studio/evidence/screens/18-匯入預覽-xls-desktop.png)<br>[18-匯入預覽-xls-mobile.png](../../.studio/evidence/screens/18-匯入預覽-xls-mobile.png) | 可新增 1 筆 與既有資料重複 3 筆 檔內重複 1 筆 格式錯誤 1 筆 |
 | 19 | 匯入預覽-csv | 通過 | [19-匯入預覽-csv-desktop.png](../../.studio/evidence/screens/19-匯入預覽-csv-desktop.png)<br>[19-匯入預覽-csv-mobile.png](../../.studio/evidence/screens/19-匯入預覽-csv-mobile.png) | 可新增 1 筆 與既有資料重複 3 筆 檔內重複 1 筆 格式錯誤 1 筆 |

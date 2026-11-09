@@ -72,7 +72,7 @@ export function ListView(p: ListViewProps) {
           )}
         </div>
         <p id="q-h" className="help">
-          車頭、車尾、姓名、身分證皆可
+          車頭車號、車斗車號、駕駛姓名、駕駛身分證皆可
         </p>
         <p className="count" aria-live="polite">
           {!loaded ? '' : needle ? `符合 ${p.shown.length} 筆／共 ${p.total} 筆` : `共 ${p.total} 筆`}
@@ -153,7 +153,7 @@ export function ListView(p: ListViewProps) {
         <div className="state state-none">
           <h3>查無符合的資料</h3>
           <p>
-            沒有符合「<span className="kw">{needle}</span>」的車頭、車尾、姓名或身分證。
+            沒有符合「<span className="kw">{needle}</span>」的車頭車號、車斗車號、駕駛姓名或駕駛身分證。
           </p>
           <p className="acts">
             <button type="button" className="btn btn-ghost" onClick={clear}>

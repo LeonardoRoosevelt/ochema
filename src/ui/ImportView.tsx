@@ -58,7 +58,7 @@ function FailureMessage({ failure }: { failure: Failure | 'system' }) {
       return (
         <>
           <strong>缺少欄位標題「{failure.missing.join('、')}」</strong>
-          <p>第一列必須是標題列，含「車頭、車尾、姓名、身分證」，順序不限。</p>
+          <p>第一列必須是標題列，含「車頭車號、車斗車號、駕駛姓名、駕駛身分證」，順序不限。</p>
         </>
       )
     case 'UNREADABLE':
@@ -230,7 +230,7 @@ export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
       {picking && (
         <>
           <p>
-            檔案需含標題列「車頭、車尾、姓名、身分證」，依標題對應，順序不限。支援 .xlsx、.xls 與 CSV（UTF-8）。可先
+            檔案需含標題列「車頭車號、車斗車號、駕駛姓名、駕駛身分證」，依標題對應，順序不限。支援 .xlsx、.xls 與 CSV（UTF-8）。可先
             <Link to="data">匯出一份當範本</Link>。
           </p>
           <p className="acts pickrow">
@@ -414,7 +414,7 @@ function PreviewPanel({ fileName, preview, mode, onMode, committing, commitFaile
         <p className="idflag">
           <span className="tag tag-warn">
             <Icon name="warn" />
-            <span>身分證警示 {idWarnings} 筆</span>
+            <span>駕駛身分證警示 {idWarnings} 筆</span>
           </span>
           <span>只提醒，不影響匯入。</span>
         </p>
@@ -458,7 +458,7 @@ function PreviewPanel({ fileName, preview, mode, onMode, committing, commitFaile
           {(
             [
               ['SKIP_DUPLICATES', '略過重複', '只匯入「可新增」的列；與既有資料重複、檔內重複的列都略過。'],
-              ['IMPORT_ALL', '照樣匯入', '同車頭、同車尾、同身分證不同姓名的列也匯入（匯入後會在名單上標示）；整列相同的列一律不匯入。'],
+              ['IMPORT_ALL', '照樣匯入', '同車頭車號、同車斗車號、同駕駛身分證不同姓名的列也匯入（匯入後會在名單上標示）；整列相同的列一律不匯入。'],
             ] as const
           ).map(([value, label, desc]) => (
             <label key={value} className="opt">

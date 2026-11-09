@@ -15,11 +15,11 @@ function Member({ record, onEdit, onDelete }: { record: VehicleRecord; onEdit: (
   return (
     <>
       <span className="plate plate-head">
-        <span className="sr">車頭 </span>
+        <span className="sr">車頭車號 </span>
         {record.headPlate}
       </span>
       <span className="plate plate-tail">
-        <span className="sr">車尾 </span>
+        <span className="sr">車斗車號 </span>
         {record.tailPlate}
       </span>
       <span className="who">{record.ownerName}</span>
@@ -38,7 +38,7 @@ function Member({ record, onEdit, onDelete }: { record: VehicleRecord; onEdit: (
   )
 }
 
-/** S5 重複與警示總覽：集中顯示所有重複組與身分證警示，並可直接編輯／刪除。 */
+/** S5 重複與警示總覽：集中顯示所有重複組與駕駛身分證警示，並可直接編輯／刪除。 */
 export function OverviewView({ overview, total, onEdit, onDelete }: OverviewViewProps) {
   const problems = overview.duplicateGroups.length + overview.idWarnings.length
   return (
@@ -64,7 +64,7 @@ export function OverviewView({ overview, total, onEdit, onDelete }: OverviewView
       {!overview.isClean && (
         <>
           <p className="total">
-            <strong>共 {problems} 個問題</strong>（重複 {overview.duplicateGroups.length} 組＋身分證警示 {overview.idWarnings.length} 筆）
+            <strong>共 {problems} 個問題</strong>（重複 {overview.duplicateGroups.length} 組＋駕駛身分證警示 {overview.idWarnings.length} 筆）
           </p>
           <div className="cols2">
             {overview.duplicateGroups.length > 0 && (
@@ -90,9 +90,9 @@ export function OverviewView({ overview, total, onEdit, onDelete }: OverviewView
             )}
             {overview.idWarnings.length > 0 && (
               <div>
-                <h3>身分證警示</h3>
+                <h3>駕駛身分證警示</h3>
                 {overview.idWarnings.map(({ record, code }) => (
-                  <div key={record.id} role="group" aria-label={`身分證警示 ${record.ownerName}`} className="grp">
+                  <div key={record.id} role="group" aria-label={`駕駛身分證警示 ${record.ownerName}`} className="grp">
                     <div className="grp-h">
                       <IdWarningTag code={code} />
                     </div>

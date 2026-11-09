@@ -48,7 +48,7 @@ describe('Unicode／超長資料的存取往返', () => {
     'a,"b"\r\nc', // 逗號、引號、換行
   ]
 
-  it('姓名原樣存入、原樣讀回（不 trim 內部、不正規化 NFC/NFD、不轉義）', async () => {
+  it('駕駛姓名原樣存入、原樣讀回（不 trim 內部、不正規化 NFC/NFD、不轉義）', async () => {
     const saved: VehicleRecord[] = []
     for (const [i, n] of names.entries()) saved.push(must(await createRecord(f(`H${i}-1`, `T${i}-1`, n))))
     const listed = await listRecords()
@@ -56,12 +56,12 @@ describe('Unicode／超長資料的存取往返', () => {
     expect(listed).toEqual(saved)
   })
 
-  it('姓名邊緣的 NBSP／全形空白／換行被 trim，內部保留', async () => {
+  it('駕駛姓名邊緣的 NBSP／全形空白／換行被 trim，內部保留', async () => {
     const r = must(await createRecord(f('A-1', 'B-2', '\u00A0\u3000\n王\u00A0小明\t ')))
     expect(r.ownerName).toBe('王\u00A0小明')
   })
 
-  it('NFC 與 NFD 寫法的同一姓名視為不同值：不是整列相同，也不觸發 SAME_ID_DIFF_NAME 以外的合併（契約 §2：原樣 ===，不正規化）', async () => {
+  it('NFC 與 NFD 寫法的同一駕駛姓名視為不同值：不是整列相同，也不觸發 SAME_ID_DIFF_NAME 以外的合併（契約 §2：原樣 ===，不正規化）', async () => {
     must(await createRecord(f('A-1', 'B-1', 'Jos\u00E9')))
     const r = await createRecord(f('A-1', 'B-1', 'Jose\u0301'))
     expect(r.ok).toBe(true) // 整列「看起來」相同但位元組不同 → 可存
@@ -69,12 +69,12 @@ describe('Unicode／超長資料的存取往返', () => {
     expect(report.groups.map((g) => g.kind).sort()).toEqual(['SAME_HEAD', 'SAME_ID_DIFF_NAME', 'SAME_TAIL'])
   })
 
-  it('零寬字元讓姓名不同：不算整列相同', async () => {
+  it('零寬字元讓駕駛姓名不同：不算整列相同', async () => {
     must(await createRecord(f('A-1', 'B-1', '王小明')))
     expect((await createRecord(f('A-1', 'B-1', '王\u200B小明'))).ok).toBe(true)
   })
 
-  it('超長姓名（10 萬字元）與 emoji 重複 2 萬次可存可讀，內容不被截斷', async () => {
+  it('超長駕駛姓名（10 萬字元）與 emoji 重複 2 萬次可存可讀，內容不被截斷', async () => {
     const longName = '王'.repeat(100_000)
     const emoji = '😀'.repeat(20_000)
     const a = must(await createRecord(f('A-1', 'B-1', longName)))
@@ -90,7 +90,7 @@ describe('Unicode／超長資料的存取往返', () => {
     expect(must(await createRecord(f(head, 'B-1', '王'))).headPlate).toBe(head)
   })
 
-  it('SQL／HTML 注入字串只是普通字串：姓名原樣存取，查詢不受影響', async () => {
+  it('SQL／HTML 注入字串只是普通字串：駕駛姓名原樣存取，查詢不受影響', async () => {
     must(await createRecord(f('A-1', 'B-1', "'; DROP TABLE vehicle_records; --")))
     must(await createRecord(f('A-2', 'B-2', '<img src=x onerror=alert(1)>')))
     expect(await listRecords()).toHaveLength(2)
@@ -115,7 +115,7 @@ describe('查詢 filterRecords 邊界', () => {
   it('不分大小寫；全形字母不等於半形（只做 toLowerCase，不做寬度轉換）', () => {
     expect(filterRecords(list(), 'abc-1').map((r) => r.id)).toEqual([2])
     expect(filterRecords(list(), 'a123456789').map((r) => r.id)).toEqual([1])
-    expect(filterRecords(list(), 'alice').map((r) => r.id)).toEqual([]) // 姓名是全形 Ａ
+    expect(filterRecords(list(), 'alice').map((r) => r.id)).toEqual([]) // 駕駛姓名是全形 Ａ
     expect(filterRecords(list(), 'ａlice').map((r) => r.id)).toEqual([1]) // 全形小寫 ａ
   })
 
@@ -187,7 +187,7 @@ describe('並行新增（ConstraintError 不成為未處理的 rejection）', ()
     expect(unhandled).toEqual([])
   })
 
-  it('並行新增兩筆同車頭：「新造成的重複通知」只出現一次（先後由交易序決定，不會雙方都通知或都不通知）', async () => {
+  it('並行新增兩筆同車頭車號：「新造成的重複通知」只出現一次（先後由交易序決定，不會雙方都通知或都不通知）', async () => {
     const results = await Promise.all([createRecord(f('SAME-1', 'B-1', '甲', 'A1')), createRecord(f('SAME-1', 'B-2', '乙', 'A2'))])
     const kinds = results.flatMap((r) => (r.ok ? r.notices.map((n) => n.kind) : []))
     expect(kinds).toEqual(['SAME_HEAD'])
@@ -208,7 +208,7 @@ describe('並行新增（ConstraintError 不成為未處理的 rejection）', ()
   })
 
   it('新增與匯入同一整列並行：不管誰先，最後只有 1 筆，且沒有 unhandled rejection', async () => {
-    const csv = utf8('車頭,車尾,姓名,身分證\r\nA-1,B-1,王,A123456789\r\n')
+    const csv = utf8('車頭車號,車斗車號,駕駛姓名,駕駛身分證\r\nA-1,B-1,王,A123456789\r\n')
     const prev = await previewImport(csv)
     if (!prev.ok) throw new Error('預覽應成功')
     await Promise.all([createRecord(f('A-1', 'B-1', '王')), commitImport(prev.preview, 'IMPORT_ALL')])
@@ -219,7 +219,7 @@ describe('並行新增（ConstraintError 不成為未處理的 rejection）', ()
 
   it('同一份預覽被提交兩次（使用者連按兩下「匯入」），兩種選項都不會產生重複列', async () => {
     const csv = utf8(
-      '車頭,車尾,姓名,身分證\r\nA-1,B-1,王,A123456789\r\nA-1,B-2,李,F131104093\r\nC-3,D-3,張,A123456789\r\n',
+      '車頭車號,車斗車號,駕駛姓名,駕駛身分證\r\nA-1,B-1,王,A123456789\r\nA-1,B-2,李,F131104093\r\nC-3,D-3,張,A123456789\r\n',
     )
     for (const mode of ['SKIP_DUPLICATES', 'IMPORT_ALL'] as const) {
       await deleteAllRecords()
@@ -278,7 +278,7 @@ describe('CRUD 邊界', () => {
     expect(await listRecords()).toEqual([])
   })
 
-  it('一人多車（同身分證同姓名）不算重複：不通知', async () => {
+  it('一人多車（同駕駛身分證同駕駛姓名）不算重複：不通知', async () => {
     must(await createRecord(f('A-1', 'B-1', '王')))
     const r = await createRecord(f('C-3', 'D-3', '王'))
     expect(r.ok && r.notices).toEqual([])

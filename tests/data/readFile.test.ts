@@ -4,12 +4,17 @@ import { gridToRawRows, readImportFile } from '../../src/data/excelRead'
 
 const utf8 = (s: string) => new TextEncoder().encode(s)
 const row = (fileRow: number, ...cells: string[]) => ({ fileRow, cells })
-const H = ['車頭', '車尾', '姓名', '身分證']
+const H = ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證']
 
 describe('標題列固定為第 1 列（契約附錄 Q-E）', () => {
   it('第 1 列空白、標題在第 2 列 → MISSING_HEADERS（缺四個），不往下找標題', () => {
     const r = gridToRawRows([row(1, '', '', '', ''), row(2, ...H), row(3, '929-X2', '20-9A', '王小明', 'A123456789')])
-    expect(r).toEqual({ ok: false, code: 'MISSING_HEADERS', missing: ['車頭', '車尾', '姓名', '身分證'] })
+    expect(r).toEqual({ ok: false, code: 'MISSING_HEADERS', missing: ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證'] })
+  })
+
+  it('舊標題（車頭、車尾、姓名、身分證）視為缺少標題：四個新標題全列為缺少', () => {
+    const r = gridToRawRows([row(1, '車頭', '車尾', '姓名', '身分證'), row(2, '929-X2', '20-9A', '王小明', 'A123456789')])
+    expect(r).toEqual({ ok: false, code: 'MISSING_HEADERS', missing: ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證'] })
   })
 
   it('整張表沒有任何非空白儲存格 → EMPTY_FILE（優先於缺標題）', () => {
@@ -37,7 +42,7 @@ describe('標題列固定為第 1 列（契約附錄 Q-E）', () => {
 describe('gridToRawRows 其餘規則', () => {
   it('標題先 trim、順序不拘、多餘欄忽略、重複標題取最左', () => {
     const r = gridToRawRows([
-      row(1, '備註', ' 身分證 ', '姓名', '車尾', '車頭', '車頭'),
+      row(1, '備註', ' 駕駛身分證 ', '駕駛姓名', '車斗車號', '車頭車號', '車頭車號'),
       row(2, 'x', 'A123456789', '王小明', '20-9A', '929-X2', 'KLP-7988'),
     ])
     expect(r).toEqual({
@@ -67,10 +72,10 @@ describe('gridToRawRows 其餘規則', () => {
   })
 
   it('缺標題時 missing 依 FIELD_ORDER 列出中文名', () => {
-    expect(gridToRawRows([row(1, '車尾', '車頭')])).toEqual({
+    expect(gridToRawRows([row(1, '車斗車號', '車頭車號')])).toEqual({
       ok: false,
       code: 'MISSING_HEADERS',
-      missing: ['姓名', '身分證'],
+      missing: ['駕駛姓名', '駕駛身分證'],
     })
   })
 })

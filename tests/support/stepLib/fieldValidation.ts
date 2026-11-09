@@ -8,7 +8,7 @@ export function registerFieldValidation(r: Reg) {
   r.when('我檢查車牌 {string}', (w, raw: string) => {
     w.plate = checkPlate(raw)
   })
-  r.when('我檢查身分證 {string}', (w, raw: string) => {
+  r.when('我檢查駕駛身分證 {string}', (w, raw: string) => {
     w.idRaw = raw
     w.idCheck = checkIdNumber(raw)
   })
@@ -38,6 +38,6 @@ export function registerFieldValidation(r: Reg) {
     expect(w.idCheck?.status).toBe('warn')
     await w.freshDb()
     const res = await createRecord(fields('929-X2', '20-9A', '王小明', w.idRaw))
-    expect(res.ok, `身分證 ${w.idRaw} 只該警示，卻存檔失敗：${JSON.stringify(res)}`).toBe(true)
+    expect(res.ok, `駕駛身分證 ${w.idRaw} 只該警示，卻存檔失敗：${JSON.stringify(res)}`).toBe(true)
   })
 }
