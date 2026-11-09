@@ -17,7 +17,7 @@ ochema 沒有後端、沒有 HTTP。這份文件定義的是「資料層模組 A
 | `fileFormat.ts` | 依內容判定檔案格式（`detectFormat`） | 純函式 |
 | `csv.ts` | 自寫 RFC 4180 解析與序列化（見 §4.2） | 純函式 |
 | `excelRead.ts` | 讀 .xlsx／.xls 為字串格；三格式共用的「格→原始列」規則（`gridToRawRows`）；`readImportFile` 總入口 | SheetJS 邊界＋純函式 |
-| `importer.ts` | 預覽分類（純）、預覽、提交 | 純函式＋idb |
+| `importer.ts` | 預覽分類（純）、預覽、整份替換 `replaceAllFromImport` | 純函式＋idb |
 | `excelWrite.ts` | 寫出 .xlsx／.xls（CSV 走 `csv.ts`）；`exportRecords` | SheetJS 邊界 |
 
 純函式不碰 IndexedDB，可用資料陣列直接測；有 I/O 的函式很薄，只負責「讀出→呼叫純函式→交易寫入」。
@@ -115,7 +115,7 @@ if (oldVersion < 1) {
 
 **DBML 無長度限制**（B-1 建議 1，已於鎖定前修正）：`schema.dbml` 四欄皆為不帶長度的 `varchar`，與 features 一致（無長度規則）。
 
-排序與「第一次出現」：全部依 `id` 升冪（`store.getAll()` 本身即 key 序）。`id` 由 autoIncrement 單調遞增，編輯不改、刪除不重用，所以不需要 `createdAt`。批次匯入在**同一個交易**內依檔案列序逐筆 `add`，故新匯入列的 id 順序＝檔案列序（情境「新匯入的資料駕駛姓名依序為…」）。
+排序與「第一次出現」：全部依 `id` 升冪（`store.getAll()` 本身即 key 序）。`id` 由 autoIncrement 單調遞增，編輯不改、刪除不重用，所以不需要 `createdAt`。整份替換在**同一個交易**內先 `clear` 再依檔案列序逐筆 `add`，故匯入列的 id 順序＝檔案列序（`autoIncrement` 不因 `clear` 重設，id 仍單調遞增）。
 
 **索引的實際角色**：名單規模小（數百至數千筆），重複偵測與查詢都可在記憶體內做。三個單欄索引用於存檔時以 O(log n) 找衝突，不是效能必需品；複合 unique 才是有行為的約束（擋整列相同）。
 
@@ -247,7 +247,7 @@ export function buildOverview(records: readonly VehicleRecord[]): Overview   // 
 `db.ts`：`getDb(): Promise<IDBPDatabase>`（沿用 BloomIn 的單例＋`blocked`／`blocking` 處理），測試用 `resetDbForTest()` 可 `deleteDatabase`。
 
 **IndexedDB 實作注意（給工程部，來自代碼審查員 B-1 建議 5）**
-1. `createRecord`／`updateRecord`／`commitImport` 的交易內**只能 await idb 的請求**。夾進其他 await（例如動態 `import('xlsx')`、`TextDecoder` 之外的任何非 IDB promise）會讓交易自動提交。需要的 SheetJS 動作一律在開交易**之前**完成。
+1. `createRecord`／`updateRecord`／`replaceAllFromImport` 的交易內**只能 await idb 的請求**。夾進其他 await（例如動態 `import('xlsx')`、`TextDecoder` 之外的任何非 IDB promise）會讓交易自動提交。需要的 SheetJS 動作一律在開交易**之前**完成。
 2. `add` 遇 `ConstraintError` 時交易會中止，`await tx.done` 也會 reject。必須接住（轉成 `IDENTICAL_ROW`），否則成為 unhandled rejection，vitest 會把整個 run 判失敗。
 3. `resetDbForTest` 要先 `db.close()` 再 `deleteDatabase`，否則 blocked；或每個 scenario 換新的 `new IDBFactory()`（fake-indexeddb）。
 4. 四欄複合 unique 可行：所有欄位保證為字串（空字串也是合法 key），不會有「值不是合法 key 而略過索引」的洞；`put` 更新自己不會與自己衝突。`getAll()` 為主鍵升冪，autoIncrement 不重用、`clear()` 不重置，與排序主張一致。
@@ -275,61 +275,80 @@ export function gridToRawRows(grid: ReadonlyArray<{ fileRow: number; cells: read
   { ok: true; rows: RawRow[] } | ({ ok: false } & ReadFailure)
 
 // ── 預覽分類（純函式）──
-export type RowCategory = 'NEW' | 'DUP_EXISTING' | 'DUP_IN_FILE' | 'FORMAT_ERROR'
+/** 四類互斥，優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW。不再有「與既有資料重複」：匯入是整份替換，不比對既有資料。 */
+export type RowCategory = 'FORMAT_ERROR' | 'IDENTICAL_IN_FILE' | 'DUP_IN_FILE' | 'NEW'
 export interface PreviewRow {
   fileRow: number
   fields: RecordFields                                   // trim 後（FORMAT_ERROR 亦然）
   category: RowCategory
   error?: { field: FieldKey; code: PlateReason | 'REQUIRED' }   // 僅 FORMAT_ERROR
   idWarning?: IdWarning                                  // 非 FORMAT_ERROR 才計算
-  /** 重複種類，全部成立者，**順序固定**為 IDENTICAL_ROW, SAME_HEAD, SAME_TAIL, SAME_ID_DIFF_NAME（與 feature 寫法一致；step 可逐項比對）。DUP_EXISTING＝對既有資料；DUP_IN_FILE＝對檔內較前面的列。整列相同時含 IDENTICAL_ROW、SAME_HEAD、SAME_TAIL */
-  kinds: RowConflictKind[]
-  existingConflicts: DuplicateConflict[]                 // 對既有資料的衝突（含衝突的既有資料）
-  inFileConflicts: Array<{ kind: DuplicateKind; value: string; fileRows: number[] }>  // 對檔內較前面列的衝突
-  /** 與誰整列相同：兩種匯入選項都不會匯入此列 */
-  identicalTo?: { source: 'EXISTING'; recordId: number } | { source: 'FILE'; fileRow: number }
+  /** 僅 DUP_IN_FILE：全部成立者，順序固定 SAME_HEAD, SAME_TAIL, SAME_ID_DIFF_NAME（其餘類別為 []） */
+  kinds: DuplicateKind[]
+  inFileConflicts: Array<{ kind: DuplicateKind; value: string; fileRows: number[] }>  // 僅 DUP_IN_FILE：對檔內較前面列的衝突
+  /** 僅 IDENTICAL_IN_FILE：與檔內較前面哪一列四欄全同（最早出現者）；此列合併掉、不匯入 */
+  identicalTo?: { fileRow: number }
 }
 export interface ImportPreview {
   rows: PreviewRow[]                                     // 檔案順序
-  counts: { total: number; new: number; dupExisting: number; dupInFile: number; formatError: number } // 四類相加＝total
-  identicalRows: number[]                                // 單獨列出的「整列相同」fileRow（預覽須告知兩選項皆不匯入）
-  source: RawRow[]                                       // 供 commitImport 重算
+  counts: { total: number; new: number; dupInFile: number; identicalInFile: number; formatError: number } // 四類相加＝total
+  identicalRows: number[]                                // 被合併的「整列相同」fileRow（預覽須告知合併為一筆）
+  /** 將刪除：預覽當下名單的筆數（N） */
+  willDelete: number
+  /** 將匯入：new + dupInFile（M）；整列相同的列已合併、不計入 */
+  willImport: number
+  /** 合併：identicalInFile（K） */
+  merged: number
+  /** 可否確認：formatError === 0 且 total > 0。否則 replaceAllFromImport 一律拒絕 */
+  canConfirm: boolean
 }
-export function buildPreview(rows: readonly RawRow[], existing: readonly VehicleRecord[]): ImportPreview
+/** existingCount＝目前名單筆數（僅用於 willDelete；不做任何與既有資料的比對） */
+export function buildPreview(rows: readonly RawRow[], existingCount: number): ImportPreview
 
 export type PreviewResult = { ok: true; preview: ImportPreview } | ({ ok: false } & ReadFailure)
-/** readImportFile + listRecords + buildPreview；不寫入。rows 為空時 ok:true、counts.total=0（UI 顯示「沒有可匯入的資料」且不提供匯入選項）。 */
+/** readImportFile + 目前筆數 + buildPreview；不寫入。rows 為空時 ok:true、counts.total=0、canConfirm=false（UI 顯示「沒有可匯入的資料」，不提供確認）。 */
 export function previewImport(bytes: ArrayBuffer | Uint8Array): Promise<PreviewResult>   // 內部呼叫 readImportFile
 
-// ── 提交 ──
-export type ImportMode = 'SKIP_DUPLICATES' | 'IMPORT_ALL'   // 略過重複／照樣匯入
-export interface ImportResult { imported: number; skipped: number; formatErrorsNotImported: number }
-/** 單一交易：讀目前名單→對 preview.source 重算分類（避免預覽後名單已變）→依檔案順序 add。放棄匯入＝不呼叫此函式。 */
-export function commitImport(preview: ImportPreview, mode: ImportMode): Promise<ImportResult>
+// ── 整份替換 ──
+export interface ImportResult { deleted: number; imported: number; merged: number }   // 已刪除 N、已匯入 M、合併 K
+export type ReplaceResult =
+  | { ok: true; result: ImportResult }
+  | { ok: false; reason: 'FORMAT_ERRORS' | 'NOTHING_TO_IMPORT' | 'WRITE_FAILED' }
+/**
+ * 單一 readwrite 交易：count（＝deleted）→ clear → 依檔案順序 add 每個 NEW／DUP_IN_FILE 列（取 preview.rows 的 fields）。
+ * - `!preview.canConfirm`：不開交易，回 `FORMAT_ERRORS`（formatError>0）或 `NOTHING_TO_IMPORT`（total=0）。
+ * - 交易內任何失敗（含測試接縫注入）：中止交易（整筆回滾，名單維持原狀），回 `WRITE_FAILED`，不丟例外。
+ * - 不重算分類：整份替換不依賴既有資料，預覽後名單變動只影響 `deleted` 的實際值（以交易內的 count 為準）。
+ * - 放棄匯入＝不呼叫此函式。二次確認框屬 UI 規則，資料層不負責。
+ */
+export function replaceAllFromImport(preview: ImportPreview): Promise<ReplaceResult>
+
+// ── 測試接縫（僅測試使用）──
+/** 注入寫入失敗：下一次 replaceAllFromImport 在寫入第 n 筆 add 之後丟錯（n≥1）。一次性：用掉即清除；傳 undefined 清除。 */
+export function injectImportWriteFault(afterWrites: number | undefined): void
 ```
 
 **分類演算法**（`buildPreview`；對每個資料列依檔案順序）：
 
-1. 四欄 trim；用 `validateRecordInput` 取第一個不合的欄位 → `FORMAT_ERROR`。此列**不參與任何比對**（不當既有、也不當「較前面的列」）。
-2. 其餘列：
-   - 對既有資料有任一衝突（`findIdenticalRow` 或 `findConflicts` 非空）→ `DUP_EXISTING`。
-   - 否則，對「檔內較前面的非格式錯誤列」（不論它們自己被分到哪一類）有任一衝突 → `DUP_IN_FILE`。
-   - 否則 → `NEW`。
-3. `identicalTo`：與既有資料或檔內較前面列四欄全同（既有優先）。
-4. 同一人多車（同駕駛身分證同駕駛姓名）不算衝突。
+1. 四欄 trim；用 `validateRecordInput` 取第一個不合的欄位 → `FORMAT_ERROR`。此列**不參與任何比對**（不當「較前面的列」）。
+2. 其餘列，對「檔內較前面的非格式錯誤列」（不論它們自己被分到哪一類）：
+   - 有四欄全同者（`findIdenticalRow`）→ `IDENTICAL_IN_FILE`，`identicalTo` 指向最早那一列。優先於檔內重複；整列相同**不計入**檔內重複。
+   - 否則有任一衝突（`findConflicts` 非空：同車頭車號、同車斗車號、同駕駛身分證不同姓名）→ `DUP_IN_FILE`。
+   - 否則 → `NEW`（含檔內重複組中「第一次出現」的那一列）。
+3. 同一人多車（同駕駛身分證同駕駛姓名）不算衝突。
+4. 駕駛身分證不合格只警示（`idWarning`），類別不變。
 
-由此推得使用者裁決：檔內重複組第一次出現者為 `NEW`；同時與既有及檔內重複者歸 `DUP_EXISTING`；只與 `DUP_EXISTING` 列重複的後面列歸 `DUP_IN_FILE`（A-gate 修訂 3）。
+**替換規則**：
 
-**提交規則**：
+| 列 | 替換時 |
+|---|---|
+| `NEW`、`DUP_IN_FILE` | 寫入（`DUP_IN_FILE` 寫入後在名單與總覽持續標示，由 `detectDuplicates` 即時計算） |
+| `IDENTICAL_IN_FILE` | 合併：不寫入（只保留第一次出現者），計入 `merged` |
+| `FORMAT_ERROR` | 只要有任何一列，整份不可確認（`canConfirm=false`），不替換 |
 
-| 列 | `SKIP_DUPLICATES` | `IMPORT_ALL` |
-|---|---|---|
-| `NEW` | 匯入 | 匯入 |
-| `DUP_EXISTING`／`DUP_IN_FILE`，`identicalTo` 有值 | 略過 | **略過** |
-| `DUP_EXISTING`／`DUP_IN_FILE`，無 `identicalTo` | 略過 | 匯入 |
-| `FORMAT_ERROR` | 不匯入，計入 `formatErrorsNotImported` | 同左 |
+`imported = new + dupInFile`；`new + dupInFile + identicalInFile + formatError = total`。整列相同合併後，檔內不會有四欄全同的兩筆，與複合 unique 約束一致，故寫入不會因 `ConstraintError` 失敗。空檔、只有標題列、無法讀取、缺標題、非 UTF-8 CSV 由 `readImportFile`／`previewImport` 拒收（沿用既有 `ReadFailure`），或 `total=0`（`canConfirm=false`），一律不替換、名單不變。
 
-`imported + skipped + formatErrorsNotImported = counts.total`。駕駛身分證警示的列照常匯入。「沒有可進行匯入的選項」是 UI 規則，資料層以 `counts.total === 0` 表達（step 以此判斷）。
+**移除**：`ImportMode`、`commitImport`、`RowCategory` 的 `DUP_EXISTING`、`PreviewRow.existingConflicts`、`ImportPreview.source`、`RowConflictKind` 在匯入的用法（型別本身仍用於 UI 標籤對照）。
 
 #### 3.5.1 讀檔規格
 
@@ -499,39 +518,35 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 
 | 情境 | 函式 | 表 |
 |---|---|---|
-| 預覽：檔案內容全部都能新增 | `previewImport`、`listRecords` | vehicle_records |
-| 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 | `previewImport`（`kinds`、`existingConflicts`） | vehicle_records |
-| 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 | `previewImport`（`inFileConflicts`） | vehicle_records |
-| 預覽：同時與既有資料及檔內其他列重複的列，歸為「與既有重複」 | `previewImport` | vehicle_records |
-| 預覽：後出現的列同時符合既有重複與檔內重複時歸既有，先出現的列仍算可新增 | `previewImport` | vehicle_records |
-| 預覽：每一列只屬於一類，各類筆數相加等於資料列數 | `previewImport`（`counts`） | vehicle_records |
+| 預覽：檔案內容全部都能匯入 | `previewImport`（`counts`） | vehicle_records |
+| 預覽：檔內重複，第一次出現者算可匯入、其餘算檔內重複（仍會匯入） | `previewImport`（`kinds`、`inFileConflicts`） | vehicle_records |
+| 預覽：每一列只屬於一類，各類筆數相加等於資料列數，且沒有其他分類 | `previewImport`（`counts`、四類） | vehicle_records |
 | 預覽：同一人多台車的列不算重複 | `previewImport` | vehicle_records |
-| 預覽：車牌格式或必填有問題的列為錯誤列 | `previewImport`（`error.code`） | vehicle_records |
-| 預覽：單獨列出整列相同的列，並告知兩種選項都不會匯入 | `previewImport`（`identicalRows`、`identicalTo`） | vehicle_records |
-| 整列相同的列在兩種選項下都不匯入，其餘依選項處理 | `previewImport`、`commitImport` | vehicle_records |
-| 預覽：只與「與既有重複的列」重複的後面列，歸為檔內重複，略過重複時兩列都不匯入 | `previewImport`、`commitImport` | vehicle_records |
-| 小寫車牌不會被自動轉成大寫，照樣匯入也不匯入 | `previewImport`、`commitImport`（`formatErrorsNotImported`） | vehicle_records |
-| 前後空白自動去除後再檢查與比對 | `readImportFile`（不 trim）、`buildPreview`（trim）、`commitImport` | vehicle_records |
+| 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 | `previewImport`（`error.code`、`canConfirm=false`） | vehicle_records |
+| 預覽：單獨列出整列相同的列，告知將合併為一筆 | `previewImport`（`identicalRows`、`identicalTo`、`merged`） | vehicle_records |
+| 整列相同的列合併為一筆，只保留第一次出現者 | `previewImport`、`replaceAllFromImport`（`merged`） | vehicle_records |
+| 預覽：寫明將刪除目前幾筆、匯入幾筆 | `previewImport`（`willDelete`、`willImport`）、`listRecords` | vehicle_records |
+| 替換成功：既有資料被檔案內容取代，原有資料不再存在 | `replaceAllFromImport`、`listRecords` | vehicle_records |
+| 名單為空時匯入：刪除 0 筆，檔案內容全部寫入 | `previewImport`、`replaceAllFromImport` | vehicle_records |
+| 檔案含格式錯誤列時不可確認，名單不變 | `previewImport`、`replaceAllFromImport`（`FORMAT_ERRORS`） | vehicle_records |
+| 小寫車牌不會被自動轉成大寫，整份擋下、名單不變 | `previewImport`、`replaceAllFromImport`（`FORMAT_ERRORS`） | vehicle_records |
+| 前後空白自動去除後再檢查與比對 | `readImportFile`（不 trim）、`buildPreview`（trim）、`replaceAllFromImport` | vehicle_records |
 | 只含空白的儲存格視為留空 | `previewImport`（`REQUIRED`） | vehicle_records |
-| 數字型儲存格讀取顯示的文字 | `readImportFile`（`cell.w`）、`commitImport` | vehicle_records |
+| 數字型儲存格讀取顯示的文字 | `readImportFile`（`cell.w`）、`replaceAllFromImport` | vehicle_records |
 | 數字型儲存格的值不符車牌格式時為錯誤列 | `readImportFile`、`previewImport` | vehicle_records |
-| 預覽：駕駛身分證不合格的列只警示，仍算可新增 | `previewImport`（`idWarning`） | vehicle_records |
+| 預覽：駕駛身分證不合格的列只警示，仍可匯入並照常寫入 | `previewImport`（`idWarning`）、`replaceAllFromImport` | vehicle_records |
 | 預覽：一列同時有格式錯誤與重複時，以格式錯誤為準 | `previewImport`（FORMAT_ERROR 不參與比對） | vehicle_records |
-| 缺少必要的欄位標題時整份檔案不接受 | `readImportFile`（`MISSING_HEADERS`） | vehicle_records |
+| 檔內的同車頭車號、同車斗車號、同駕駛身分證不同姓名，兩列都一併匯入 | `previewImport`、`replaceAllFromImport` | vehicle_records |
+| 手動新增的資料在下次匯入後被覆蓋 | `createRecord`、`replaceAllFromImport` | vehicle_records |
+| 替換為單一交易：寫入失敗時名單維持原狀 | `injectImportWriteFault`、`replaceAllFromImport`（`WRITE_FAILED`，交易回滾） | vehicle_records |
+| 缺少必要的欄位標題時整份檔案不接受，名單不變 | `readImportFile`（`MISSING_HEADERS`） | vehicle_records |
+| 使用舊欄位標題（車頭、車尾、姓名、身分證）的檔案不接受，告知缺少欄位標題 | `readImportFile`（`MISSING_HEADERS`） | vehicle_records |
 | 欄位順序與匯出不同，仍依標題對應 | `readImportFile` | vehicle_records |
-| 只有標題列、沒有資料列的檔案 | `previewImport`（`counts.total=0`） | vehicle_records |
-| 完全空白的檔案 | `readImportFile`（`EMPTY_FILE`） | vehicle_records |
-| 不是 Excel 的檔案 | `readImportFile`（`UNREADABLE`；`detectFormat`） | vehicle_records |
-| 選擇略過重複：與既有資料重複的列不匯入 | `commitImport('SKIP_DUPLICATES')` | vehicle_records |
-| 略過重複：檔內重複組只保留第一次出現的那一列 | `commitImport('SKIP_DUPLICATES')` | vehicle_records |
-| 混合檔案：略過重複與照樣匯入的匯入筆數與保留的列 | `commitImport` 兩種模式、`listRecords`（id 序） | vehicle_records |
-| 選擇照樣匯入：與既有資料的同車頭車號、同車斗車號、同駕駛身分證不同姓名照樣匯入 | `commitImport('IMPORT_ALL')` | vehicle_records |
-| 選擇照樣匯入：檔內的同車頭車號、同車斗車號、同駕駛身分證不同姓名兩列都匯入 | `commitImport('IMPORT_ALL')` | vehicle_records |
-| 照樣匯入：與既有資料四欄完全相同的整列不匯入 | `commitImport('IMPORT_ALL')`（`identicalTo`） | vehicle_records |
-| 照樣匯入：檔內四欄完全相同的整列只保留第一列 | `commitImport('IMPORT_ALL')` | vehicle_records |
-| 照樣匯入：格式錯誤的列仍然不匯入 | `commitImport('IMPORT_ALL')` | vehicle_records |
-| 駕駛身分證不合格的列在略過重複時照常匯入 | `commitImport('SKIP_DUPLICATES')` | vehicle_records |
-| 預覽後放棄，名單不變 | `previewImport`（唯讀；不呼叫 `commitImport`） | vehicle_records |
+| 只有標題列、沒有資料列的檔案：不替換，名單不變 | `previewImport`（`counts.total=0`、`canConfirm=false`） | vehicle_records |
+| 完全空白的檔案：不替換，名單不變 | `readImportFile`（`EMPTY_FILE`） | vehicle_records |
+| 不是 Excel 的檔案：不替換，名單不變 | `readImportFile`（`UNREADABLE`；`detectFormat`） | vehicle_records |
+| 預覽後放棄，名單不變 | `previewImport`（唯讀；不呼叫 `replaceAllFromImport`） | vehicle_records |
+| 預覽不提供任何重複處理的選項 | `replaceAllFromImport(preview)`（單一參數、無模式）；選項不存在屬 UI 規則（元件測試驗證） | vehicle_records |
 
 **excel-export.feature**
 
@@ -540,8 +555,9 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | 匯出檔的標題與欄位順序 | `exportRecords`／`buildExportBytes` | vehicle_records |
 | 所有值以文字保留，前導 0 不消失 | `buildExportBytes(…, 'xlsx')`（`t:'s'`） | vehicle_records |
 | 重複與警示的資料也如實匯出 | `exportRecords` | vehicle_records |
-| 匯出後再匯入能完整還原 | `exportRecords`、`deleteAllRecords`、`previewImport`、`commitImport('IMPORT_ALL')`、`listRecords` | vehicle_records |
-| 含重複的名單匯出再匯入，選擇照樣匯入仍能完整還原 | 同上 | vehicle_records |
+| 匯出後再匯入能完整還原 | `exportRecords`、`deleteAllRecords`、`previewImport`、`replaceAllFromImport`、`listRecords` | vehicle_records |
+| 名單之後被改成別的內容，匯入匯出檔仍直接還原成匯出前的名單 | `exportRecords`、`createRecord`、`replaceAllFromImport`（`deleted`） | vehicle_records |
+| 含重複的名單匯出再匯入仍能完整還原 | 同上 | vehicle_records |
 | 名單為空時匯出只有標題列的範本檔 | `exportRecords` | vehicle_records |
 | 空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 | `exportRecords`、`previewImport`（`counts.total=0`） | vehicle_records |
 | 含特殊字元的駕駛姓名原樣匯出 | `buildExportBytes` | vehicle_records |
@@ -550,15 +566,16 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 
 | 情境 | 函式 | 表 |
 |---|---|---|
-| 舊式 .xls 檔可預覽並匯入 | `previewImport`、`commitImport`（`readImportFile` 走 xls 分支） | vehicle_records |
-| .xls 的數字型儲存格同樣讀取顯示的文字 | `readImportFile`（`cell.w`；**待實測 T1**）、`commitImport` | vehicle_records |
-| UTF-8 CSV 可預覽並匯入，不論有無 BOM；前導 0 保留為字串 | `detectFormat`、`parseCsv`、`previewImport`、`commitImport` | vehicle_records |
-| CSV 的欄位內含逗號、被引號包住的欄位依規則解析 | `parseCsv`（引號欄、`""`）、`commitImport` | vehicle_records |
-| 非 UTF-8 的 CSV 不接受，提示以 CSV UTF-8 另存 | `detectFormat`（`UNREADABLE`＋`hint: 'SAVE_AS_CSV_UTF8'`） | vehicle_records |
+| 舊式 .xls 檔可預覽並替換 | `previewImport`、`replaceAllFromImport`（`readImportFile` 走 xls 分支） | vehicle_records |
+| .xls 的數字型儲存格同樣讀取顯示的文字 | `readImportFile`（`cell.w`；**待實測 T1**）、`replaceAllFromImport` | vehicle_records |
+| UTF-8 CSV 可預覽並匯入，不論有無 BOM；前導 0 保留為字串 | `detectFormat`、`parseCsv`、`previewImport`、`replaceAllFromImport` | vehicle_records |
+| CSV 的欄位內含逗號、被引號包住的欄位依規則解析 | `parseCsv`（引號欄、`""`）、`replaceAllFromImport` | vehicle_records |
+| 非 UTF-8 的 CSV 不接受，提示以 CSV UTF-8 另存，名單不變 | `detectFormat`（`UNREADABLE`＋`hint: 'SAVE_AS_CSV_UTF8'`） | vehicle_records |
 | 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取 | `detectFormat`（NUL／非 UTF-8）；截斷 .xls 見 **T5** | vehicle_records |
 | 檔案格式依內容判定，不看副檔名 | `detectFormat`（只看位元組） | vehicle_records |
 | 各檔案格式的預覽分類規則一致 | `previewImport`／`buildPreview`（三格式共用 `gridToRawRows`） | vehicle_records |
-| 各檔案格式的匯入選項規則一致 | `commitImport` | vehicle_records |
+| 各檔案格式的整份替換規則一致 | `replaceAllFromImport` |
+| 各檔案格式含格式錯誤列時整份擋下，名單不變 | `previewImport`、`replaceAllFromImport`（`FORMAT_ERRORS`） | vehicle_records |
 | 各檔案格式都依標題名稱對應欄位，與欄位順序無關 | `gridToRawRows` | vehicle_records |
 | 各檔案格式缺少必要的欄位標題時整份檔案不接受 | `gridToRawRows`（`MISSING_HEADERS`） | vehicle_records |
 | 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料 | `previewImport`（`counts.total=0`） | vehicle_records |
@@ -576,8 +593,8 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | 各格式匯出的值都以文字保留，前導 0 不消失 | 測試 helper 檢查 `t:'s'`（xlsx／xls，**T3**）；CSV 檢查原始文字 | vehicle_records |
 | CSV 匯出為帶 BOM 的 UTF-8 | `buildExportBytes(…, 'csv')`（前 3 bytes＝`EF BB BF`） | vehicle_records |
 | CSV 匯出時，含逗號與引號的值以引號包住並原樣還原 | `serializeCsv`、`parseCsv`（往返） | vehicle_records |
-| 各格式匯出後再匯入能完整還原 | `exportRecords(fmt)`、`deleteAllRecords`、`previewImport`、`commitImport('IMPORT_ALL')`、`listRecords` | vehicle_records |
-| 各格式匯出含重複的名單再匯入，選擇照樣匯入仍能完整還原 | 同上 | vehicle_records |
+| 各格式匯出後再匯入能完整還原 | `exportRecords(fmt)`、`deleteAllRecords`、`previewImport`、`replaceAllFromImport`、`listRecords` | vehicle_records |
+| 各格式匯出含重複的名單再匯入仍能完整還原 | 同上 | vehicle_records |
 | 名單為空時各格式都匯出只有標題列的範本檔 | `exportRecords(fmt)` | vehicle_records |
 | 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 | `exportRecords(fmt)`、`previewImport`（`counts.total=0`） | vehicle_records |
 | 各格式匯出含特殊字元的駕駛姓名都原樣保留 | `buildExportBytes(…, fmt)`、`readImportFile`（xls 見 **T2**／**T3**） | vehicle_records |
@@ -606,14 +623,14 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | duplicate-detection：名單持續標示、重開仍在、刪除後消失、編輯解除、三筆剩兩筆 | `detectDuplicates`（`byRecordId`）、`listRecords`、`deleteRecord` | vehicle_records |
 | duplicate-detection：總覽（有／無問題） | `getOverview` | vehicle_records |
 | search：全部 7 個情境 | `filterRecords`、`listRecords`（編輯後查詢條件保持屬 UI 狀態） | vehicle_records |
-| excel-import：照樣匯入後標示重複、畫面預覽並匯入 | `previewImport`、`commitImport`、`detectDuplicates` | vehicle_records |
+| excel-import：在畫面上預覽、二次確認並替換成功；含格式錯誤時確認不可用；二次確認取消；二次確認中先匯出；替換後檔內重複持續標示 | `previewImport`（`willDelete`／`willImport`／`canConfirm`）、`replaceAllFromImport`、`exportRecords`（先匯出）、`detectDuplicates` | vehicle_records |
 | excel-export：畫面匯出、空名單範本、篩選中仍匯出全部 | `exportRecords`（`count` 供「已匯出 N 筆」；不吃查詢條件） | vehicle_records |
-| excel-import（新增）：在畫面上選擇 .xls 或 CSV 檔預覽並匯入 | `previewImport`、`commitImport`（檔案以 `FileReader` 取 `ArrayBuffer`） | vehicle_records |
-| excel-import（新增）：在畫面上選擇 Big5 CSV，提示以 CSV UTF-8 另存 | `previewImport` 回 `{ code: 'UNREADABLE', hint: 'SAVE_AS_CSV_UTF8' }`；UI 據 `hint` 顯示提示、不顯示預覽與匯入選項 | vehicle_records |
+| excel-import（新增）：在畫面上選擇 .xls 或 CSV 檔預覽、二次確認並替換 | `previewImport`、`replaceAllFromImport`（檔案以 `FileReader` 取 `ArrayBuffer`） | vehicle_records |
+| excel-import（新增）：在畫面上選擇 Big5 CSV，提示以 CSV UTF-8 另存 | `previewImport` 回 `{ code: 'UNREADABLE', hint: 'SAVE_AS_CSV_UTF8' }`；UI 據 `hint` 顯示提示、不顯示預覽與確認匯入 | vehicle_records |
 | excel-export（新增）：未選格式預設取得 .xlsx | `exportRecords()`（預設 `'xlsx'`） | vehicle_records |
 | excel-export（新增）：在畫面上選擇格式匯出並取得對應檔案 | `exportRecords(fmt)`（`fileName` 副檔名、`mimeType`） | vehicle_records |
 | excel-export（新增）：篩選中各格式匯出仍是全部資料 | `exportRecords(fmt)`（不吃查詢條件） | vehicle_records |
-| offline-use：無網路查詢／新增／匯出／預覽匯入 | `filterRecords`、`createRecord`、`exportRecords`、`previewImport`／`commitImport`（資料層不發任何網路請求，SheetJS 為打包內容） | vehicle_records |
+| offline-use：無網路查詢／新增／匯出／預覽、二次確認並匯入 | `filterRecords`、`createRecord`、`exportRecords`、`previewImport`／`replaceAllFromImport`（資料層不發任何網路請求，SheetJS 為打包內容） | vehicle_records |
 | offline-use：所有操作都不對外發出網路請求 | 同上全部函式 | vehicle_records |
 | offline-use：畫面說明資料只存在這台裝置並提醒備份 | 無（純 UI 文案） | — |
 
@@ -627,7 +644,7 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 | field-validation 檔頭（駕駛身分證 6 個） | `ID_CHECKSUM`、`ID_LENGTH`、`ID_LOWERCASE`、`ID_FIRST_NOT_ALPHA`、`ID_NON_DIGIT`、`ID_LEGACY_RESIDENCE` | `IdWarning`，優先序同註解 |
 | duplicate-detection／excel-import | 同車頭車號／同車斗車號／同駕駛身分證不同姓名／整列相同 | `SAME_HEAD`／`SAME_TAIL`／`SAME_ID_DIFF_NAME`／`IDENTICAL_ROW`（features 內是中文，代碼為本文件命名，工程部可調整，但須一對一） |
 
-匯入預覽的四類（可新增／與既有重複／檔內重複／格式錯誤）＝`NEW`／`DUP_EXISTING`／`DUP_IN_FILE`／`FORMAT_ERROR`。
+匯入預覽的四類（可匯入／檔內重複／整列相同／格式錯誤）＝`NEW`／`DUP_IN_FILE`／`IDENTICAL_IN_FILE`／`FORMAT_ERROR`（優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW）。匯入的 `kinds` 只含 `SAME_HEAD`／`SAME_TAIL`／`SAME_ID_DIFF_NAME`；`IDENTICAL_ROW` 僅用於手動新增／編輯被擋的情況。
 
 ---
 
@@ -662,7 +679,7 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 - Q-E 邊界：標題列固定為檔案第 1 列。整張表沒有任何非空白儲存格 → EMPTY_FILE；有內容但第 1 列空白 → MISSING_HEADERS（缺四個標題）。
 
 ## 附錄：製片人裁決（工程部紅燈待決，2026-11-09）
-- 匯入確認（更正，鎖定情境優先）：兩個選項一律顯示、不預選；預覽沒有任何重複時「確認匯入」可直接按；有重複時未選選項前確認鈕停用。
+- ~~匯入確認（更正，鎖定情境優先）：兩個選項一律顯示、不預選；預覽沒有任何重複時「確認匯入」可直接按；有重複時未選選項前確認鈕停用。~~（**已被 `.studio/decisions/import-replace.md` 取代**：匯入改整份替換，不再有略過／照樣匯入選項）
 - 截斷 .xls 偵測不完整（T5）：接受降級，列為已知限制；不加結構啟發式。
 - PWA：registerType 'prompt' 且不做更新提示 UI（UX 裁決 9）；新版在所有視窗關閉後下次開啟生效，不打斷操作。
 - 契約補充：db.ts 有 closeDbForTest()；App 接受 download prop（DownloadedFile 型別）供測試攔截下載。
@@ -679,3 +696,11 @@ export function exportFileName(now: Date, format: ExportFormat = 'xlsx'): string
 ## 附錄：C 退回 1 修正（資料層，2026-11-09）
 - `excelWrite.ts`：新增 `CELL_MAX_CHARS = 32_767`（.xlsx）、`XLS_CELL_MAX_CHARS = 255`（.xls）與 `class CellTooLongError extends Error`（欄位 `recordId: number`、`field: FieldKey`、`length: number`、`limit: number`、`format: 'xlsx' | 'xls'`）。.xls 上限為 255 的原因：SheetJS BIFF8 寫端對每格 `slice(0, 255)`，超過會**靜默截斷**（實測 256+ 字元讀回只剩 255）。`buildExportBytes(…, 'xlsx' | 'xls')` 在任一欄位（UTF-16 長度）超過該格式上限時丟出，指出依 id 升冪、欄序第一個違規者；`exportRecords` 隨之 reject。CSV 不受影響。不新增輸入長度規則（存入仍不限長）。**UI 須接住並顯示「有資料超過 Excel 儲存格上限，請改用 CSV 匯出」**。
 - 契約 §3.6 往返還原的**已知限制**：.xlsx 內的 CRLF（`\r\n`）讀回會變 LF。SheetJS 讀取 xlsx 字串時，對「已解碼 XML 跳脫（含 `&#13;`、`_x000D_`）後」的結果一律執行 `replace(/\r\n/g, "\n")`（xlsx.mjs `unescapexml(text, true)`），所有字串讀取路徑皆然，寫端無法繞過；單獨 CR、單獨 LF 可還原。CSV、.xls 不受影響。
+
+## 附錄：匯入改為整份替換（工程部，2026-11-09）
+依 `.studio/decisions/import-replace.md` 與重新核可的 `features/`（142 情境）。
+- 移除：`ImportMode`、`commitImport`、`RowCategory.DUP_EXISTING`、`PreviewRow.existingConflicts`、`ImportPreview.source`、`counts.dupExisting`、`counts.new` 的「可新增」稱呼（改稱「可匯入」，欄位名 `new` 不變）、`ImportResult.skipped`／`formatErrorsNotImported`。
+- 新增：`RowCategory.IDENTICAL_IN_FILE`、`counts.identicalInFile`、`ImportPreview.willDelete`／`willImport`／`merged`／`canConfirm`、`replaceAllFromImport(preview)`、`ImportResult { deleted, imported, merged }`、測試接縫 `injectImportWriteFault(afterWrites)`。
+- `buildPreview(rows, existingCount)`：第二參數由「既有資料陣列」改為「目前筆數」。
+- 失敗以回傳值表達（`ReplaceResult`），不丟例外；`WRITE_FAILED` 時交易已中止、名單維持原狀。
+- UI 規則（資料層不負責）：有格式錯誤時「確認匯入」為 `aria-disabled` 並說明原因；按下後跳原生 `<dialog>` 二次確認（預設焦點「取消」，含「先匯出目前資料」＝`exportRecords('xlsx')`，匯出後對話框仍在、名單不變）；空名單也要二次確認。

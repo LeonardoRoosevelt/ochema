@@ -7,11 +7,13 @@
  */
 import { expect } from 'vitest'
 import { closeDbForTest, resetDbForTest } from '../../src/data/db'
+import { injectImportWriteFault } from '../../src/data/importer'
 import { createRecord, deleteAllRecords, listRecords } from '../../src/data/records'
 import type {
   DuplicateReport,
   IdCheck,
   ImportResult,
+  ReplaceResult,
   PlateCheck,
   PreviewResult,
   RecordFields,
@@ -68,6 +70,8 @@ export class World {
   preview?: PreviewResult
   previewBefore?: VehicleRecord[]
   importResult?: ImportResult
+  /** 最近一次 replaceAllFromImport 的回傳（成功或被拒絕） */
+  replaceResult?: ReplaceResult
   // 匯出
   exported?: ExportResult
   exportedRecords: RecordFields[] = []
@@ -112,6 +116,7 @@ let current = new World()
 export const world = (): World => current
 
 export function resetWorld(): void {
+  injectImportWriteFault(undefined) // 測試接縫是一次性的；未用到時也不可外洩到下一個情境
   current.ui.dispose()
   current = new World()
 }

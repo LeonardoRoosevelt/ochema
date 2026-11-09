@@ -1,18 +1,19 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { commitImport, previewImport } from '../data/importer'
+import { previewImport, replaceAllFromImport } from '../data/importer'
 import {
   COLUMN_TITLES,
   FIELD_ORDER,
-  type ImportMode,
   type ImportPreview,
   type ImportResult,
   type PreviewResult,
   type PreviewRow,
   type RowCategory,
 } from '../data/types'
+import type { DownloadFn } from './download'
 import { Icon } from './icons'
 import { KIND_LABEL, fieldErrorText } from './labels'
 import { IdWarningTag } from './RecordTable'
+import { ReplaceDialog } from './ReplaceDialog'
 import { Link } from './router'
 
 const PAGE_SIZE = 200
@@ -33,13 +34,6 @@ function readFileBytes(file: File): Promise<Uint8Array> {
     reader.onerror = () => reject(reader.error ?? new Error('read failed'))
     reader.readAsArrayBuffer(file)
   })
-}
-
-/** 兩種匯入選項各自會匯入幾筆：NEW 一律匯入；照樣匯入再加上「重複但不是整列相同」的列（整列相同兩種選項都不匯入）。 */
-export function expectedImports(preview: ImportPreview, mode: ImportMode): number {
-  if (mode === 'SKIP_DUPLICATES') return preview.counts.new
-  const forced = preview.rows.filter((r) => (r.category === 'DUP_EXISTING' || r.category === 'DUP_IN_FILE') && !r.identicalTo).length
-  return preview.counts.new + forced
 }
 
 function FailureMessage({ failure }: { failure: Failure | 'system' }) {
@@ -77,11 +71,9 @@ function FailureMessage({ failure }: { failure: Failure | 'system' }) {
 
 function describe(row: PreviewRow): string {
   if (row.category === 'FORMAT_ERROR' && row.error) return fieldErrorText(row.error.field, row.error.code)
-  if (row.category === 'NEW') return ''
+  if (row.category !== 'DUP_IN_FILE') return ''
   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
-  const targets: string[] = []
-  for (const c of row.existingConflicts) targets.push(`既有資料：${c.records.map((r) => `${r.ownerName}（${r.headPlate}）`).join('、')}`)
-  for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.join('、')} 列`)
+  const targets = row.inFileConflicts.map((c) => `檔案第 ${c.fileRows.join('、')} 列`)
   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
 }
 
@@ -147,17 +139,19 @@ function CategoryTable({ title, rows, open }: { title: string; rows: PreviewRow[
 }
 
 interface ImportViewProps {
-  /** 匯入成功後呼叫（外層重新載入名單） */
+  /** 替換成功後呼叫（外層重新載入名單） */
   onCommitted: () => Promise<void> | void
   /** 取消／放棄預覽時回到的畫面 */
   onCancel: () => void
+  /** 二次確認框「先匯出目前資料」交給下載的函式 */
+  download: DownloadFn
 }
 
-/** S4 匯入：選檔 → 預覽（確認前不寫入）→ 結果。 */
-export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
+/** S4 匯入（整份替換）：選檔 → 預覽（確認前不寫入）→ 二次確認 → 結果。 */
+export function ImportView({ onCommitted, onCancel, download }: ImportViewProps) {
   const uid = useId()
   const [stage, setStage] = useState<Stage>({ kind: 'select' })
-  const [mode, setMode] = useState<ImportMode | undefined>()
+  const [asking, setAsking] = useState(false)
   const [committing, setCommitting] = useState(false)
   const [commitFailed, setCommitFailed] = useState(false)
   const [pickKey, setPickKey] = useState(0)
@@ -178,14 +172,14 @@ export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
   function reset() {
     token.current += 1
     setStage({ kind: 'select' })
-    setMode(undefined)
+    setAsking(false)
     setCommitFailed(false)
     setPickKey((n) => n + 1)
   }
 
   async function onFile(file: File) {
     const mine = ++token.current
-    setMode(undefined)
+    setAsking(false)
     setCommitFailed(false)
     setStage({ kind: 'parsing', fileName: file.name })
     let bytes: Uint8Array
@@ -204,15 +198,23 @@ export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
     }
   }
 
-  async function confirm(preview: ImportPreview, chosen: ImportMode) {
+  /** 二次確認框按下「確認替換」 */
+  async function replace(preview: ImportPreview) {
     if (committing) return
     setCommitting(true)
     setCommitFailed(false)
     try {
-      const result = await commitImport(preview, chosen)
-      await onCommitted()
-      setStage({ kind: 'done', result })
+      const result = await replaceAllFromImport(preview)
+      if (result.ok) {
+        await onCommitted()
+        setAsking(false)
+        setStage({ kind: 'done', result: result.result })
+      } else {
+        setAsking(false)
+        setCommitFailed(true)
+      }
     } catch {
+      setAsking(false)
       setCommitFailed(true)
     } finally {
       setCommitting(false)
@@ -230,8 +232,9 @@ export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
       {picking && (
         <>
           <p>
-            檔案需含標題列「車頭車號、車斗車號、駕駛姓名、駕駛身分證」，依標題對應，順序不限。支援 .xlsx、.xls 與 CSV（UTF-8）。可先
-            <Link to="data">匯出一份當範本</Link>。
+            匯入會用檔案內容<strong>整份取代</strong>目前的名單（不是累加）。檔案需含標題列「車頭車號、車斗車號、駕駛姓名、駕駛身分證」，依標題對應，順序不限。支援
+            .xlsx、.xls 與 CSV（UTF-8）。可先
+            <Link to="data">匯出一份當範本或備份</Link>。
           </p>
           <p className="acts pickrow">
             <input
@@ -278,7 +281,7 @@ export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
               <strong>檔案內沒有可匯入的資料</strong>
             </div>
             <div className="msg-b">
-              <p>{stage.fileName} 只有標題列，或資料列都是空白。檔案本身格式沒有問題。</p>
+              <p>{stage.fileName} 只有標題列，或資料列都是空白。名單沒有任何變更。</p>
             </div>
           </div>
         )}
@@ -287,12 +290,12 @@ export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
             <div className="msg-h">
               <Icon name="ok" />
               <strong>
-                匯入完成：已匯入 {stage.result.imported} 筆、略過 {stage.result.skipped} 筆
+                匯入完成：已刪除 {stage.result.deleted} 筆、已匯入 {stage.result.imported} 筆
               </strong>
             </div>
-            {stage.result.formatErrorsNotImported > 0 && (
+            {stage.result.merged > 0 && (
               <div className="msg-b">
-                <p>格式錯誤未匯入 {stage.result.formatErrorsNotImported} 筆。</p>
+                <p>合併 {stage.result.merged} 筆整列相同（只保留第一次出現的那一列）。</p>
               </div>
             )}
             <span className="seal" aria-hidden="true">
@@ -314,14 +317,23 @@ export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
         <PreviewPanel
           fileName={stage.fileName}
           preview={stage.preview}
-          mode={mode}
-          onMode={setMode}
-          committing={committing}
           commitFailed={commitFailed}
-          onConfirm={(m) => void confirm(stage.preview, m)}
+          onConfirm={() => setAsking(true)}
           onCancel={onCancel}
           onPickAnother={reset}
           uid={uid}
+        />
+      )}
+
+      {stage.kind === 'preview' && asking && (
+        <ReplaceDialog
+          willDelete={stage.preview.willDelete}
+          willImport={stage.preview.willImport}
+          merged={stage.preview.merged}
+          download={download}
+          busy={committing}
+          onCancel={() => setAsking(false)}
+          onConfirm={() => void replace(stage.preview)}
         />
       )}
 
@@ -344,25 +356,18 @@ export function ImportView({ onCommitted, onCancel }: ImportViewProps) {
 interface PreviewPanelProps {
   fileName: string
   preview: ImportPreview
-  mode: ImportMode | undefined
-  onMode: (mode: ImportMode) => void
-  committing: boolean
   commitFailed: boolean
-  onConfirm: (mode: ImportMode) => void
+  onConfirm: () => void
   onCancel: () => void
   onPickAnother: () => void
   uid: string
 }
 
-function PreviewPanel({ fileName, preview, mode, onMode, committing, commitFailed, onConfirm, onCancel, onPickAnother, uid }: PreviewPanelProps) {
+function PreviewPanel({ fileName, preview, commitFailed, onConfirm, onCancel, onPickAnother, uid }: PreviewPanelProps) {
   const { counts } = preview
   const byCategory = (c: RowCategory) => preview.rows.filter((r) => r.category === c)
   const idWarnings = preview.rows.filter((r) => r.idWarning).length
-  const duplicates = counts.dupExisting + counts.dupInFile
-  // 選項永遠顯示、不預選。沒有任何重複時兩種結果相同，不選也可直接確認（視同略過重複）；有重複時必須明確選一個
-  const needChoice = duplicates > 0
-  const chosen: ImportMode | undefined = needChoice ? mode : (mode ?? 'SKIP_DUPLICATES')
-  const expected = chosen ? expectedImports(preview, chosen) : 0
+  const sums = counts.new + counts.dupInFile + counts.identicalInFile + counts.formatError === counts.total
 
   if (counts.total === 0) {
     return (
@@ -379,8 +384,10 @@ function PreviewPanel({ fileName, preview, mode, onMode, committing, commitFaile
     )
   }
 
-  const hint = needChoice && !chosen ? '請先選擇上方的匯入方式。' : expected === 0 ? '沒有可匯入的資料。' : undefined
-  const sums = counts.new + counts.dupExisting + counts.dupInFile + counts.formatError === counts.total
+  // 有格式錯誤：整份擋下，不可確認，也不提「將刪除」，避免讓人以為會替換
+  const hint = preview.canConfirm
+    ? undefined
+    : `檔案有 ${counts.formatError} 筆格式錯誤，整份不會匯入，所以不能確認。請修正檔案後重新選擇；名單沒有任何變更。`
 
   return (
     <>
@@ -393,23 +400,29 @@ function PreviewPanel({ fileName, preview, mode, onMode, committing, commitFaile
 
       <div className="stats" role="group" aria-label="預覽統計">
         <p className="st st-new">
-          <span className="stat-line">可新增 {counts.new} 筆</span>
-        </p>
-        <p className="st st-dupe">
-          <span className="stat-line">與既有資料重複 {counts.dupExisting} 筆</span>
+          <span className="stat-line">可匯入 {counts.new} 筆</span>
         </p>
         <p className="st st-dupf">
           <span className="stat-line">檔內重複 {counts.dupInFile} 筆</span>
+        </p>
+        <p className="st st-dupe">
+          <span className="stat-line">整列相同 {counts.identicalInFile} 筆</span>
         </p>
         <p className="st st-bad">
           <span className="stat-line">格式錯誤 {counts.formatError} 筆</span>
         </p>
       </div>
       <p className="sumline">
-        {counts.new} ＋ {counts.dupExisting} ＋ {counts.dupInFile} ＋ {counts.formatError} ＝{' '}
+        {counts.new} ＋ {counts.dupInFile} ＋ {counts.identicalInFile} ＋ {counts.formatError} ＝{' '}
         <strong className="wxtotal">{counts.total} 列</strong>
         {sums && <span>　四類相加與資料列數相符。</span>}
       </p>
+      {preview.canConfirm && (
+        <p className="replaceline">
+          <strong>{`將刪除目前 ${preview.willDelete} 筆、匯入 ${preview.willImport} 筆`}</strong>
+          <span>（整份替換，不是累加）。檔內重複的列也會匯入，並在名單與總覽持續標示。</span>
+        </p>
+      )}
       {idWarnings > 0 && (
         <p className="idflag">
           <span className="tag tag-warn">
@@ -424,63 +437,29 @@ function PreviewPanel({ fileName, preview, mode, onMode, committing, commitFaile
         <div className="msg msg-warn" role="group" aria-label="整列相同的列">
           <div className="msg-h">
             <Icon name="warn" />
-            <strong>整列相同 {preview.identicalRows.length} 筆</strong>
+            <strong>整列相同 {preview.identicalRows.length} 筆將合併</strong>
           </div>
           <div className="msg-b">
             <ul className="same">
               {preview.identicalRows.map((n) => {
-                const row = preview.rows.find((r) => r.fileRow === n)
-                const to = row?.identicalTo
+                const to = preview.rows.find((r) => r.fileRow === n)?.identicalTo
                 return (
                   <li key={n}>
-                    檔案第 {n} 列：{to?.source === 'FILE' ? `與檔案第 ${to.fileRow} 列整列相同` : '與既有資料整列相同'}
+                    檔案第 {n} 列：與檔案第 {to?.fileRow} 列整列相同
                   </li>
                 )
               })}
             </ul>
-            <p>這些列不論選擇「略過重複」或「照樣匯入」都不會匯入。</p>
+            <p>四欄完全相同的列合併為一筆，只保留第一次出現的那一列。</p>
           </div>
         </div>
       )}
 
       <div className="cats">
         <CategoryTable title={`格式錯誤明細（${counts.formatError} 筆）`} rows={byCategory('FORMAT_ERROR')} open />
-        <CategoryTable title={`與既有資料重複明細（${counts.dupExisting} 筆）`} rows={byCategory('DUP_EXISTING')} open />
         <CategoryTable title={`檔內重複明細（${counts.dupInFile} 筆）`} rows={byCategory('DUP_IN_FILE')} open />
-        <CategoryTable title={`可新增明細（${counts.new} 筆）`} rows={byCategory('NEW')} open={false} />
+        <CategoryTable title={`可匯入明細（${counts.new} 筆）`} rows={byCategory('NEW')} open={false} />
       </div>
-
-      {(
-        <div role="radiogroup" aria-labelledby={`${uid}-mode`} className="opts">
-          <p id={`${uid}-mode`} className="sublabel">
-            選擇匯入方式
-          </p>
-          {(
-            [
-              ['SKIP_DUPLICATES', '略過重複', '只匯入「可新增」的列；與既有資料重複、檔內重複的列都略過。'],
-              ['IMPORT_ALL', '照樣匯入', '同車頭車號、同車斗車號、同駕駛身分證不同姓名的列也匯入（匯入後會在名單上標示）；整列相同的列一律不匯入。'],
-            ] as const
-          ).map(([value, label, desc]) => (
-            <label key={value} className="opt">
-              <input
-                type="radio"
-                name={`${uid}-import-mode`}
-                value={value}
-                checked={mode === value}
-                onChange={() => onMode(value)}
-                aria-labelledby={`${uid}-${value}-t`}
-                aria-describedby={`${uid}-${value}-d`}
-              />
-              <span className="ot">
-                <b id={`${uid}-${value}-t`}>{label}</b>
-                <span id={`${uid}-${value}-d`}>
-                  {desc}格式錯誤的列不會匯入。<em>預計匯入 {expectedImports(preview, value)} 筆</em>
-                </span>
-              </span>
-            </label>
-          ))}
-        </div>
-      )}
 
       {commitFailed && (
         <div className="msg msg-block compact" role="alert">
@@ -498,11 +477,10 @@ function PreviewPanel({ fileName, preview, mode, onMode, committing, commitFaile
         <button
           type="button"
           className="btn btn-primary"
-          disabled={committing}
-          // 還不能確認時用 aria-disabled 而不是 disabled：按鈕仍可用鍵盤聚焦，才讀得到下方的原因說明
-          aria-disabled={!chosen || expected === 0 || undefined}
+          // 不能確認時用 aria-disabled 而不是 disabled：按鈕仍可用鍵盤聚焦，才讀得到下方的原因說明
+          aria-disabled={!preview.canConfirm || undefined}
           aria-describedby={hint ? `${uid}-hint` : undefined}
-          onClick={() => chosen && expected > 0 && onConfirm(chosen)}
+          onClick={() => preview.canConfirm && onConfirm()}
         >
           確認匯入
         </button>

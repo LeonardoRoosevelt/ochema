@@ -126,7 +126,8 @@ export interface RawRow {
 export type ReadResult = { ok: true; format: ImportFormat; rows: RawRow[] } | ({ ok: false } & ReadFailure)
 export type GridRowsResult = { ok: true; rows: RawRow[] } | ({ ok: false } & ReadFailure)
 
-export type RowCategory = 'NEW' | 'DUP_EXISTING' | 'DUP_IN_FILE' | 'FORMAT_ERROR'
+/** 四類互斥，優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（匯入是整份替換，不比對既有資料） */
+export type RowCategory = 'FORMAT_ERROR' | 'IDENTICAL_IN_FILE' | 'DUP_IN_FILE' | 'NEW'
 export interface PreviewRow {
   fileRow: number
   /** trim 後（FORMAT_ERROR 亦然） */
@@ -136,33 +137,38 @@ export interface PreviewRow {
   error?: { field: FieldKey; code: PlateReason | 'REQUIRED' }
   /** 非 FORMAT_ERROR 才計算 */
   idWarning?: IdWarning
-  /** 全部成立者，順序固定：IDENTICAL_ROW, SAME_HEAD, SAME_TAIL, SAME_ID_DIFF_NAME */
-  kinds: RowConflictKind[]
-  /** 對既有資料的衝突（含衝突的既有資料） */
-  existingConflicts: DuplicateConflict[]
-  /** 對檔內較前面列的衝突 */
+  /** 僅 DUP_IN_FILE：全部成立者，順序固定 SAME_HEAD, SAME_TAIL, SAME_ID_DIFF_NAME；其餘類別為 [] */
+  kinds: DuplicateKind[]
+  /** 僅 DUP_IN_FILE：對檔內較前面列的衝突 */
   inFileConflicts: Array<{ kind: DuplicateKind; value: string; fileRows: number[] }>
-  /** 與誰整列相同：兩種匯入選項都不會匯入此列 */
-  identicalTo?: { source: 'EXISTING'; recordId: number } | { source: 'FILE'; fileRow: number }
+  /** 僅 IDENTICAL_IN_FILE：與檔內最早出現的哪一列四欄全同；此列合併、不匯入 */
+  identicalTo?: { fileRow: number }
 }
 export interface ImportPreview {
   /** 檔案順序 */
   rows: PreviewRow[]
   /** 四類相加＝total */
-  counts: { total: number; new: number; dupExisting: number; dupInFile: number; formatError: number }
-  /** 單獨列出的「整列相同」fileRow */
+  counts: { total: number; new: number; dupInFile: number; identicalInFile: number; formatError: number }
+  /** 被合併的「整列相同」fileRow */
   identicalRows: number[]
-  /** 供 commitImport 重算 */
-  source: RawRow[]
+  /** 將刪除：預覽當下的名單筆數 */
+  willDelete: number
+  /** 將匯入：new + dupInFile */
+  willImport: number
+  /** 合併：identicalInFile */
+  merged: number
+  /** formatError === 0 且 total > 0 */
+  canConfirm: boolean
 }
 export type PreviewResult = { ok: true; preview: ImportPreview } | ({ ok: false } & ReadFailure)
-/** 略過重複／照樣匯入 */
-export type ImportMode = 'SKIP_DUPLICATES' | 'IMPORT_ALL'
 export interface ImportResult {
+  deleted: number
   imported: number
-  skipped: number
-  formatErrorsNotImported: number
+  merged: number
 }
+export type ReplaceResult =
+  | { ok: true; result: ImportResult }
+  | { ok: false; reason: 'FORMAT_ERRORS' | 'NOTHING_TO_IMPORT' | 'WRITE_FAILED' }
 
 // ── 匯出（excelWrite.ts）─────────────────────────────
 export type ExportFormat = 'xlsx' | 'xls' | 'csv'

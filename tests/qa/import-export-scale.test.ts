@@ -1,6 +1,6 @@
 /**
  * QA（API 測試員）：大檔匯入耗時、三格式匯出含 emoji／特殊字元的往返。
- * 依據 docs/data-contract.md §3.5（分類與提交）、§3.6（匯出）。
+ * 依據 docs/data-contract.md §3.5（分類與整份替換）、§3.6（匯出）。
  * 耗時上限刻意寬鬆（jsdom＋fake-indexeddb，非瀏覽器效能）；實測耗時用 console.info 留下紀錄。
  */
 import * as XLSX from 'xlsx'
@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { resetDbForTest } from '../../src/data/db'
 import { readImportFile } from '../../src/data/excelRead'
 import { CellTooLongError, XLS_MAX_ROWS, XlsRowLimitError, buildExportBytes, exportRecords } from '../../src/data/excelWrite'
-import { commitImport, previewImport } from '../../src/data/importer'
+import { previewImport, replaceAllFromImport } from '../../src/data/importer'
 import { createRecord, listRecords } from '../../src/data/records'
 import type { ExportFormat, RawRow, VehicleRecord } from '../../src/data/types'
 import { utf8 } from '../support/csvFixture'
@@ -51,12 +51,12 @@ describe(`大檔匯入（${N} 列）`, () => {
     const prev = await timed(`${fmt} previewImport ${N}`, () => previewImport(bytes))
     if (!prev.value.ok) throw new Error('預覽應成功')
     const p = prev.value.preview
-    expect(p.counts).toEqual({ total: N, new: N, dupExisting: 0, dupInFile: 0, formatError: 0 })
+    expect(p.counts).toEqual({ total: N, new: N, dupInFile: 0, identicalInFile: 0, formatError: 0 })
     expect(p.rows[0].fileRow).toBe(2)
     expect(p.rows.at(-1)!.fileRow).toBe(N + 1)
 
-    const commit = await timed(`${fmt} commitImport ${N}`, () => commitImport(p, 'SKIP_DUPLICATES'))
-    expect(commit.value).toEqual({ imported: N, skipped: 0, formatErrorsNotImported: 0 })
+    const commit = await timed(`${fmt} replaceAllFromImport ${N}`, () => replaceAllFromImport(p))
+    expect(commit.value).toEqual({ ok: true, result: { deleted: 0, imported: N, merged: 0 } })
     const listed = await listRecords()
     expect(listed).toHaveLength(N)
     expect(listed.map((r) => r.headPlate)).toEqual(Array.from({ length: N }, (_, i) => `H${i}-A`))
@@ -64,37 +64,45 @@ describe(`大檔匯入（${N} 列）`, () => {
     expect(prev.ms + commit.ms).toBeLessThan(30_000)
   })
 
-  it('csv 最壞情況：5,000 列全部同車頭車號（每列都要與前面所有列比對）→ 全是 DUP_IN_FILE（第一列 NEW），耗時在上限內', async () => {
+  it('csv 最壞情況：5,000 列全部同車頭車號（每列都要與前面所有列比對）→ 全是 DUP_IN_FILE（第一列 NEW），照樣匯入，耗時在上限內', async () => {
     const grid = bigGrid(N, (i) => ['SAME-1', `T${i}-B`, `車主${i}`, `A${String(i).padStart(9, '0')}`])
     const prev = await timed('csv previewImport 全同車頭車號', () => previewImport(bytesOf('csv', grid)))
     if (!prev.value.ok) throw new Error('預覽應成功')
-    expect(prev.value.preview.counts).toEqual({ total: N, new: 1, dupExisting: 0, dupInFile: N - 1, formatError: 0 })
+    expect(prev.value.preview.counts).toEqual({ total: N, new: 1, dupInFile: N - 1, identicalInFile: 0, formatError: 0 })
     expect(prev.ms).toBeLessThan(20_000)
-    const commit = await timed('csv commitImport IMPORT_ALL 全同車頭車號', () => commitImport(prev.value.ok ? prev.value.preview : (undefined as never), 'IMPORT_ALL'))
-    expect(commit.value.imported).toBe(N) // 非整列相同 → 照樣匯入
+    const commit = await timed('csv replaceAllFromImport 全同車頭車號', () => replaceAllFromImport(prev.value.ok ? prev.value.preview : (undefined as never)))
+    expect(commit.value).toMatchObject({ ok: true, result: { imported: N } }) // 非整列相同 → 照樣匯入
     expect(commit.ms).toBeLessThan(30_000)
   })
 
-  it('csv：5,000 列中混入整列相同、格式錯誤、對既有資料重複 → 三項計數相加＝total；IMPORT_ALL 不匯入整列相同', async () => {
+  it('csv：5,000 列中混入整列相同、檔內重複、格式錯誤 → 四類相加＝total；有格式錯誤整份擋下且名單不動，修掉錯誤列後替換成功', async () => {
     await createRecord({ headPlate: 'EXIST-1', tailPlate: 'EXIST-2', ownerName: '既有', idNumber: 'A123456789' })
-    const grid = bigGrid(N, (i) => {
-      if (i % 1000 === 0) return ['bad', `T${i}-B`, `X${i}`, 'A123456789'] // 小寫無連字號 → FORMAT_ERROR（5 列）
-      if (i % 1000 === 1) return ['EXIST-1', 'EXIST-2', '既有', 'A123456789'] // 與既有整列相同（5 列）
-      if (i % 1000 === 2) return ['EXIST-1', `T${i}-B`, `Y${i}`, `A${i}`] // 同車頭車號（5 列）
-      return unique(i)
-    })
-    const prev = await previewImport(bytesOf('csv', grid))
+    const mk = (withBad: boolean) =>
+      bigGrid(N, (i) => {
+        if (i % 1000 === 0) return withBad ? ['bad', `T${i}-B`, `X${i}`, 'A123456789'] : unique(i) // 小寫無連字號 → FORMAT_ERROR（5 列）
+        if (i % 1000 === 1) return ['DUP-1', 'DUP-2', '整列', 'A123456789'] // 每千列一組，同一列重複 5 次 → 1 NEW＋4 整列相同
+        if (i % 1000 === 2) return ['SAME-H', `T${i}-B`, `Y${i}`, `A${i}`] // 同車頭車號（5 列 → 1 NEW＋4 檔內重複）
+        return unique(i)
+      })
+    const prev = await previewImport(bytesOf('csv', mk(true)))
     if (!prev.ok) throw new Error('預覽應成功')
     const c = prev.preview.counts
     expect(c.total).toBe(N)
-    expect(c.new + c.dupExisting + c.dupInFile + c.formatError).toBe(N)
+    expect(c.new + c.dupInFile + c.identicalInFile + c.formatError).toBe(N)
     expect(c.formatError).toBe(5)
-    expect(prev.preview.identicalRows).toHaveLength(5)
-    const res = await commitImport(prev.preview, 'IMPORT_ALL')
-    expect(res.formatErrorsNotImported).toBe(5)
-    expect(res.imported + res.skipped + res.formatErrorsNotImported).toBe(N)
-    expect(res.skipped).toBe(5) // 只有整列相同的 5 列被略過
-    expect(await listRecords()).toHaveLength(1 + N - 5 - 5)
+    expect(c.identicalInFile).toBe(4)
+    expect(prev.preview.identicalRows).toHaveLength(4)
+    expect(prev.preview.canConfirm).toBe(false)
+    const before = await listRecords()
+    expect(await replaceAllFromImport(prev.preview)).toEqual({ ok: false, reason: 'FORMAT_ERRORS' })
+    expect(await listRecords(), '被擋下時名單不動').toEqual(before)
+
+    const ok = await previewImport(bytesOf('csv', mk(false)))
+    if (!ok.ok) throw new Error('預覽應成功')
+    expect(ok.preview.counts.formatError).toBe(0)
+    const res = await replaceAllFromImport(ok.preview)
+    expect(res).toEqual({ ok: true, result: { deleted: 1, imported: N - 4, merged: 4 } })
+    expect(await listRecords()).toHaveLength(N - 4)
   })
 
   // SheetJS 的 XLSX.write 遇到 !ref=A1:XFD1048576 會逐格走訪而卡死（fixture 端就造不出檔），
@@ -145,7 +153,7 @@ describe('三格式匯出 → 讀回（往返）', () => {
     expect(read.rows.map((r) => r.fileRow)).toEqual(recs.map((_, i) => i + 2))
   })
 
-  it.each(FORMATS)('%s：經資料庫完整往返（exportRecords → previewImport → commitImport）後四欄與順序完全還原', async (fmt) => {
+  it.each(FORMATS)('%s：經資料庫完整往返（exportRecords → previewImport → replaceAllFromImport）後四欄與順序完全還原', async (fmt) => {
     for (const r of mkRecords()) {
       const res = await createRecord(r)
       expect(res.ok, r.ownerName).toBe(true)
@@ -157,8 +165,8 @@ describe('三格式匯出 → 讀回（往返）', () => {
     const prev = await previewImport(out.bytes)
     if (!prev.ok) throw new Error('預覽應成功')
     expect(prev.preview.counts.total).toBe(before.length)
-    // 匯出的資料彼此之間會有「同車頭車號／同駕駛身分證不同姓名」之類的重複 → 用 IMPORT_ALL，整列相同者才會被略過
-    await commitImport(prev.preview, 'IMPORT_ALL')
+    // 匯出的資料彼此之間會有「同車頭車號／同駕駛身分證不同姓名」之類的重複：整份替換照樣全部寫入
+    expect(await replaceAllFromImport(prev.preview)).toMatchObject({ ok: true })
     const after = (await listRecords()).map(({ id: _id, ...f }) => f)
     expect(after).toEqual(before)
   })

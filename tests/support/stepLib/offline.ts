@@ -153,20 +153,20 @@ export function registerOffline(r: Reg) {
       rows: [['KLP-7988', 'OL-02', '李美玲', 'F131104093']],
     })
     await ui.chooseImportFile(makeFile(bytes, 'journey.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'))
-    await ui.chooseImportMode('略過重複')
     await ui.confirmImport()
+    await ui.confirmReplace() // 整份替換：王大明被取代，名單只剩檔案裡的李美玲
     await ui.goList()
-    await ui.expectRowCount(2)
+    await ui.expectRowCount(1)
+    expect(ui.allRowValues().map((v) => v.ownerName)).toEqual(['李美玲'])
 
     await ui.exportAll()
     expect(ui.downloads, '應取得一個匯出檔').toHaveLength(1)
     const exported = readExportedSheet(ui.downloads[0]!.bytes, 'xlsx')
-    expect(exported.rows.map((row) => row[FIELD_ORDER.indexOf('ownerName')])).toEqual(['王大明', '李美玲'])
+    expect(exported.rows.map((row) => row[FIELD_ORDER.indexOf('ownerName')])).toEqual(['李美玲'])
 
     await ui.goList()
-    const dialog = await ui.requestDelete(ui.rowBy('ownerName', '王大明'))
+    const dialog = await ui.requestDelete(ui.rowBy('ownerName', '李美玲'))
     await ui.confirmDelete(dialog)
-    await ui.expectRowCount(1)
-    expect(ui.allRowValues().map((v) => v.ownerName)).toEqual(['李美玲'])
+    await ui.expectRowCount(0)
   })
 }

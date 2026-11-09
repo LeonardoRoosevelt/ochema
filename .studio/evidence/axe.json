@@ -106,7 +106,7 @@
       ],
       "passes": 25
     },
-    "20-import-preview": {
+    "20-import-preview-blocked": {
       "violations": [],
       "incomplete": [
         {
@@ -116,7 +116,24 @@
           "nodes": 1
         }
       ],
-      "passes": 31
+      "passes": 29
+    },
+    "21-import-preview": {
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "passes": 29
+    },
+    "21a-import-confirm-dialog": {
+      "violations": [],
+      "incomplete": [],
+      "passes": 13
     },
     "22-import-result": {
       "violations": [],

@@ -59,13 +59,13 @@ Feature: 離線使用與本機資料
     And 匯出的 Excel 檔有 1 列資料
 
   @ui @table:vehicle_records
-  Scenario: 無網路時仍可預覽並匯入 Excel
+  Scenario: 無網路時仍可預覽、二次確認並匯入 Excel
     Given 名單是空的
     And 裝置沒有網路連線
     And 一份 Excel 檔，標題列為 車頭車號、車斗車號、駕駛姓名、駕駛身分證，內容如下：
       | 車頭車號   | 車斗車號  | 駕駛姓名   | 駕駛身分證     |
       | 929-X2 | 20-9A | 王小明 | A123456789 |
-    When 我預覽並選擇「略過重複」後確認匯入
+    When 我預覽並確認匯入
     Then 名單上有 1 筆資料
 
   @ui @table:vehicle_records

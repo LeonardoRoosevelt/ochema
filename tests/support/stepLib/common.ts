@@ -1,10 +1,10 @@
 import { expect } from 'vitest'
 import { listRecords } from '../../../src/data/records'
 import { fields, rowToFields, stripId, type World } from '../world'
-import { quoted, type Reg, type TableRow } from './reg'
+import type { Reg, TableRow } from './reg'
 
 /** 名單筆數：資料層一律檢查；UI 已開啟時再檢查畫面上的列數（兩邊都要對，才算「名單上有 N 筆」） */
-async function expectCount(w: World, n: number) {
+export async function expectCount(w: World, n: number) {
   const records = await listRecords()
   expect(records, `資料庫內的名單筆數`).toHaveLength(n)
   if (w.ui.mounted) {
@@ -45,17 +45,7 @@ export function registerCommon(r: Reg) {
   ]) {
     r.step(p, async (w, n: number) => expectCount(w, n))
   }
-  // 這兩句發生在匯入預覽畫面上：只查資料庫，不切換畫面（切到名單頁會離開預覽，後面的「確認匯入」就找不到了）
-  for (const p of ['名單仍是空的', '在我確認之前名單仍是空的']) {
-    r.step(p, async () => {
-      expect(await listRecords(), '預覽階段不該寫入任何資料').toHaveLength(0)
-    })
-  }
-
   // ── 依駕駛姓名查資料（匯入結果檢查）──
-  r.step('名單上有駕駛姓名 {string} 的資料', async (_w, name: string) => {
-    expect((await listRecords()).filter((x) => x.ownerName === name).length, `駕駛姓名 ${name} 的資料筆數`).toBeGreaterThan(0)
-  })
   r.step('名單上有駕駛姓名 {string} 的資料，其車頭車號是 {string}', async (_w, name: string, head: string) => {
     const hits = (await listRecords()).filter((x) => x.ownerName === name)
     expect(hits.map((x) => x.headPlate)).toContain(head)
@@ -85,22 +75,14 @@ export function registerCommon(r: Reg) {
     expect(names).not.toContain(a)
     expect(names).not.toContain(b)
   })
-  for (const p of ['名單上駕駛姓名為 {string} 的資料只有 {int} 筆', '名單上駕駛姓名為 {string} 的資料有 {int} 筆']) {
-    r.step(p, async (_w, name: string, n: number) => {
-      expect((await listRecords()).filter((x) => x.ownerName === name)).toHaveLength(n)
-    })
-  }
+  r.step('名單上駕駛姓名為 {string} 的資料只有 {int} 筆', async (_w, name: string, n: number) => {
+    expect((await listRecords()).filter((x) => x.ownerName === name)).toHaveLength(n)
+  })
   // numeric cell 情境：整份名單只有這一筆，駕駛姓名必須是「文字」顯示值（007 不可變成 7）
   r.step('這筆資料的駕駛姓名是文字 {string}', async (_w, name: string) => {
     const all = await listRecords()
     expect(all).toHaveLength(1)
     expect(all[0]!.ownerName).toBe(name)
     expect(typeof all[0]!.ownerName).toBe('string')
-  })
-  r.step('新匯入的資料駕駛姓名依序為 {any}', async (w, list: string) => {
-    const before = w.previewBefore ?? []
-    const maxId = Math.max(0, ...before.map((x) => x.id))
-    const added = (await listRecords()).filter((x) => x.id > maxId).map((x) => x.ownerName)
-    expect(added).toEqual(quoted(list))
   })
 }

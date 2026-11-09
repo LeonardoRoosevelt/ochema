@@ -5,11 +5,11 @@ exit=0
  RUN  v5.1.0 /Users/leonardoroosevelt/Project/ochema
 
 
- Test Files  21 passed (21)
-      Tests  1377 passed | 10 todo (1387)
-   Start at  16:37:23
-   Duration  44.07s (tests 80%, environment 15%, import 3%, transform 1%)
+ Test Files  22 passed (22)
+      Tests  1400 passed | 10 todo (1410)
+   Start at  20:29:37
+   Duration  24.47s (tests 76%, environment 18%, import 4%, transform 1%, setup 1%)
 
-    Isolate  21 workers spawned · ~1.22s startup each (spawn + environment, per file)
-             at least ~5.19s faster with isolate: false — reuses workers across files instead of one per file
+    Isolate  22 workers spawned · ~880ms startup each (spawn + environment, per file)
+             at least ~3.96s faster with isolate: false — reuses workers across files instead of one per file
 

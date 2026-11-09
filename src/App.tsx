@@ -210,7 +210,7 @@ export function App({ download = browserDownload }: AppProps) {
             onTheme={chooseTheme}
           />
         )}
-        {route === 'import' && <ImportView onCommitted={refresh} onCancel={() => navigate('data')} />}
+        {route === 'import' && <ImportView onCommitted={async () => { setNotice(undefined); setFlash(undefined); await refresh() }} onCancel={() => navigate('data')} download={download} />}
       </main>
 
       {form && (

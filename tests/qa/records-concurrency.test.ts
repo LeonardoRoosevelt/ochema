@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { resetDbForTest } from '../../src/data/db'
 import { detectDuplicates } from '../../src/data/duplicates'
-import { commitImport, previewImport } from '../../src/data/importer'
+import { previewImport, replaceAllFromImport } from '../../src/data/importer'
 import { createRecord, deleteAllRecords, deleteRecord, listRecords, updateRecord } from '../../src/data/records'
 import { filterRecords } from '../../src/data/search'
 import type { RecordFields, SaveResult, VehicleRecord } from '../../src/data/types'
@@ -211,26 +211,27 @@ describe('並行新增（ConstraintError 不成為未處理的 rejection）', ()
     const csv = utf8('車頭車號,車斗車號,駕駛姓名,駕駛身分證\r\nA-1,B-1,王,A123456789\r\n')
     const prev = await previewImport(csv)
     if (!prev.ok) throw new Error('預覽應成功')
-    await Promise.all([createRecord(f('A-1', 'B-1', '王')), commitImport(prev.preview, 'IMPORT_ALL')])
+    await Promise.all([createRecord(f('A-1', 'B-1', '王')), replaceAllFromImport(prev.preview)])
     await settle()
     expect(await listRecords()).toHaveLength(1)
     expect(unhandled).toEqual([])
   })
 
-  it('同一份預覽被提交兩次（使用者連按兩下「匯入」），兩種選項都不會產生重複列', async () => {
+  it('同一份預覽被提交兩次（使用者連按兩下「確認替換」），名單仍是檔案內容、沒有重複列', async () => {
     const csv = utf8(
       '車頭車號,車斗車號,駕駛姓名,駕駛身分證\r\nA-1,B-1,王,A123456789\r\nA-1,B-2,李,F131104093\r\nC-3,D-3,張,A123456789\r\n',
     )
-    for (const mode of ['SKIP_DUPLICATES', 'IMPORT_ALL'] as const) {
-      await deleteAllRecords()
-      const prev = await previewImport(csv)
-      if (!prev.ok) throw new Error('預覽應成功')
-      await Promise.all([commitImport(prev.preview, mode), commitImport(prev.preview, mode)])
-      await settle()
-      const rows = (await listRecords()).map((r) => JSON.stringify([r.headPlate, r.tailPlate, r.ownerName, r.idNumber]))
-      expect(new Set(rows).size, mode).toBe(rows.length) // 不變式：名單永遠沒有整列相同
-      expect(unhandled, mode).toEqual([])
-    }
+    await createRecord(f('OLD-1', 'OLD-2', '舊'))
+    const prev = await previewImport(csv)
+    if (!prev.ok) throw new Error('預覽應成功')
+    const results = await Promise.all([replaceAllFromImport(prev.preview), replaceAllFromImport(prev.preview)])
+    await settle()
+    expect(results.every((r) => r.ok)).toBe(true)
+    const listed = await listRecords()
+    expect(listed.map((r) => r.ownerName)).toEqual(['王', '李', '張']) // 兩次都是整份替換，不會變成 6 筆
+    const rows = listed.map((r) => JSON.stringify([r.headPlate, r.tailPlate, r.ownerName, r.idNumber]))
+    expect(new Set(rows).size).toBe(rows.length) // 不變式：名單永遠沒有整列相同
+    expect(unhandled).toEqual([])
   })
 
   it('新增與刪除並行：不丟錯、最終狀態與循序執行的某一種順序一致', async () => {

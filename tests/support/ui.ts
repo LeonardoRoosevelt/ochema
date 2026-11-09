@@ -31,12 +31,16 @@
  *  S6 資料（link「資料」）：radiogroup「匯出格式」內 radio「.xlsx」（預設選取）「.xls」「CSV」；
  *    button「匯出全部…」（名稱以此開頭）；button「匯入 Excel」進入 S4；
  *    C3 結果訊息放在 role=status，內含「已匯出 N 筆資料」。
- *  S4 匯入：file input 標籤「選擇 Excel 檔」；選檔後顯示預覽：
- *    統計文字「可新增 N 筆」「與既有資料重複 N 筆」「檔內重複 N 筆」「格式錯誤 N 筆」；
+ *  S4 匯入（整份替換）：file input 標籤「選擇 Excel 檔」；選檔後顯示預覽：
+ *    統計文字「可匯入 N 筆」「檔內重複 N 筆」「整列相同 N 筆」「格式錯誤 N 筆」（四類，沒有別的）；
+ *    無格式錯誤時寫明「將刪除目前 N 筆、匯入 M 筆」；整列相同的列另有合併告知；
  *    格式錯誤明細的同一個 listitem／row 內有「檔案第 N 列」與錯誤原因文字（文案見 ia.md 5.1）；
- *    radio「略過重複」「照樣匯入」；button「確認匯入」（預設已有選項，見回報待決問題）；button「取消」。
- *    結果文字「已匯入 N 筆、略過 M 筆」（有格式錯誤時加「格式錯誤未匯入 K 筆」）；button/link「回到名單」。
- *    無法讀取：文字「檔案無法讀取」；Big5 另含「CSV UTF-8」提示；此時沒有預覽統計、沒有選項、沒有「確認匯入」。
+ *    沒有任何處理重複的選項（沒有 radio）；只有 button「確認匯入」「取消」。
+ *    有格式錯誤時「確認匯入」為 aria-disabled=true（仍可聚焦），並以 aria-describedby 說明原因。
+ *    按「確認匯入」後跳 dialog「確認替換整份名單？」：button「先匯出目前資料」「取消」（預設焦點）「確認替換」；
+ *    先匯出＝匯出全部 .xlsx，對話框仍開著、名單不變；取消＝關閉、名單不變。
+ *    確認替換後結果文字「已刪除 N 筆、已匯入 M 筆」（有合併時加「合併 K 筆整列相同」）；button/link「回到名單」。
+ *    無法讀取：文字「檔案無法讀取」；Big5 另含「CSV UTF-8」提示；此時沒有預覽統計、沒有「確認匯入」。
  * ════════════════════════════════════════════════════════════════════════════
  */
 import { createElement } from 'react'
@@ -49,6 +53,7 @@ import { NetworkGuard } from './network'
 export const LIST_NAME = '車輛所屬名單'
 export const FORM_NAMES = { add: '新增資料', edit: '編輯資料' } as const
 export const NOTICE_NAME = '重複與警示通知'
+export const REPLACE_DIALOG = '確認替換整份名單？'
 const WAIT = { timeout: 2000 }
 
 const FIELD_LABELS: Record<keyof RecordFields, string> = {
@@ -313,14 +318,42 @@ export class Ui {
     fireEvent.change(input, { target: { files: [file] } })
   }
 
-  async chooseImportMode(label: '略過重複' | '照樣匯入') {
-    fireEvent.click(await screen.findByRole('radio', { name: label }, WAIT))
+  importButton(): HTMLElement {
+    return screen.getByRole('button', { name: '確認匯入' })
   }
 
+  /** 按「確認匯入」並等二次確認框出現。 */
   async confirmImport() {
     const button = await screen.findByRole('button', { name: '確認匯入' }, WAIT)
-    expect((button as HTMLButtonElement).disabled, '「確認匯入」不可用：選檔後應已預設選項（見回報待決問題 Q2）').toBe(false)
+    expect(button.getAttribute('aria-disabled'), '「確認匯入」不可用').not.toBe('true')
     fireEvent.click(button)
+    await screen.findByRole('dialog', { name: REPLACE_DIALOG }, WAIT)
+  }
+
+  replaceDialog(): HTMLElement | null {
+    return screen.queryByRole('dialog', { name: REPLACE_DIALOG })
+  }
+
+  /** 二次確認框按「確認替換」 */
+  async confirmReplace() {
+    const dialog = await screen.findByRole('dialog', { name: REPLACE_DIALOG }, WAIT)
+    fireEvent.click(within(dialog).getByRole('button', { name: '確認替換' }))
+    // 替換完成（或失敗）後對話框會關閉
+    await waitFor(() => expect(this.replaceDialog()).toBeNull(), WAIT)
+  }
+
+  async cancelReplace() {
+    const dialog = await screen.findByRole('dialog', { name: REPLACE_DIALOG }, WAIT)
+    fireEvent.click(within(dialog).getByRole('button', { name: '取消' }))
+    await waitFor(() => expect(this.replaceDialog()).toBeNull(), WAIT)
+  }
+
+  /** 二次確認框按「先匯出目前資料」，等到取得下載檔 */
+  async exportBeforeReplace() {
+    const dialog = await screen.findByRole('dialog', { name: REPLACE_DIALOG }, WAIT)
+    const before = this.downloads.length
+    fireEvent.click(within(dialog).getByRole('button', { name: '先匯出目前資料' }))
+    await waitFor(() => expect(this.downloads.length, '按下「先匯出目前資料」後沒有取得任何檔案').toBeGreaterThan(before), WAIT)
   }
 }
 

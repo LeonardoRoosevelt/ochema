@@ -66,33 +66,42 @@ const R4 = { head: '555-ZZ', tail: '66-Y', name: '趙刪除', id: validId('C', '
 const R5 = { head: '888-QQ', tail: '12-AB', name: '離線新增', id: validId('D', '45678901') }
 
 const HEADER = ['車頭車號', '車斗車號', '駕駛姓名', '駕駛身分證']
-const IMPORT_ROWS = [
-  [R1.head, R1.tail, R1.name, R1.id], // 檔案第 2 列：與既有資料整列相同
-  ['777-N1', '88-M2', '新甲', validId('E', '56789012')], // 第 3 列：可新增
-  ['777-N1', '88-M2', '新甲', validId('E', '56789012')], // 第 4 列：與第 3 列整列相同
-  [R1.head, '99-Q9', '同車頭車號乙', validId('F', '67890123')], // 第 5 列：與既有重複（同車頭車號，非整列相同）
-  ['bad-plate', '12-3', '格式錯誤', validId('G', '78901234')], // 第 6 列：車牌格式錯
-  ['700-P1', '71-R2', '新丙', 'A123456788'], // 第 7 列：可新增，駕駛身分證警示
+// 匯入是整份替換（SEED3 三筆會被取代）。分類：格式錯誤 > 整列相同 > 檔內重複 > 可匯入，不再比對既有資料。
+const CLEAN_ROWS = [
+  [R1.head, R1.tail, R1.name, R1.id], // 檔案第 2 列：可匯入
+  ['777-N1', '88-M2', '新甲', validId('E', '56789012')], // 第 3 列：可匯入
+  ['777-N1', '88-M2', '新甲', validId('E', '56789012')], // 第 4 列：與第 3 列整列相同 → 合併
+  [R1.head, '99-Q9', '同車頭車號乙', validId('F', '67890123')], // 第 5 列：與第 2 列同車頭車號（非整列相同）→ 檔內重複，照樣匯入
+  ['700-P1', '71-R2', '新丙', 'A123456788'], // 第 6 列：可匯入，駕駛身分證警示
 ]
+/** 含格式錯誤列的檔（用來驗證整份被擋下）：在 CLEAN_ROWS 第 5 列後插入一列車牌格式錯誤 */
+const IMPORT_ROWS = [...CLEAN_ROWS.slice(0, 4), ['bad-plate', '12-3', '格式錯誤', validId('G', '78901234')], ...CLEAN_ROWS.slice(4)]
 
 function writeFixtures() {
   const XLSX = require('xlsx')
-  const aoa = [HEADER, ...IMPORT_ROWS]
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), '名單')
   const out = {}
+  const book = (aoa) => {
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), '名單')
+    return wb
+  }
+  const bad = [HEADER, ...IMPORT_ROWS] // 7 列（含標題）：可匯入 3、檔內重複 1、整列相同 1、格式錯誤 1
   for (const [ext, type] of [['xlsx', 'xlsx'], ['xls', 'biff8']]) {
     const p = join(FIXTURES, `import-sample.${ext}`)
-    writeFileSync(p, XLSX.write(wb, { type: 'buffer', bookType: type }))
+    writeFileSync(p, XLSX.write(book(bad), { type: 'buffer', bookType: type }))
     out[ext] = p
   }
-  const csv = '﻿' + aoa.map((r) => r.join(',')).join('\r\n') + '\r\n'
   out.csv = join(FIXTURES, 'import-sample.csv')
-  writeFileSync(out.csv, csv, 'utf8')
-  // 讀回驗證：三個檔都能被 SheetJS 讀成 7 列（含標題）
+  writeFileSync(out.csv, '﻿' + bad.map((r) => r.join(',')).join('\r\n') + '\r\n', 'utf8')
+  // 無錯誤的檔（驗證替換成功）：6 列（含標題）：可匯入 3、檔內重複 1、整列相同 1
+  out.clean = join(FIXTURES, 'import-clean.xlsx')
+  writeFileSync(out.clean, XLSX.write(book([HEADER, ...CLEAN_ROWS]), { type: 'buffer', bookType: 'xlsx' }))
+  // 讀回驗證：含錯誤的三個檔都能被 SheetJS 讀成 7 列、乾淨檔 6 列（含標題）
   for (const [ext, p] of Object.entries(out)) {
-    const rows = XLSX.utils.sheet_to_json(XLSX.read(readFileSync(p)).Sheets[XLSX.read(readFileSync(p)).SheetNames[0]], { header: 1 })
-    must(rows.length === 7, `${ext} 測試檔讀回列數應為 7，實得 ${rows.length}`)
+    const wb = XLSX.read(readFileSync(p))
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 })
+    const want = ext === 'clean' ? 6 : 7
+    must(rows.length === want, `${ext} 測試檔讀回列數應為 ${want}，實得 ${rows.length}`)
   }
   return out
 }
@@ -449,9 +458,26 @@ async function groupExport(browser) {
 
 async function groupImport(browser, files) {
   const { context, page } = await newGroup(browser, '匯入', SEED3)
-  const expect2211 = (ext, stats) =>
-    // 第 7 列駕駛身分證 A123456788 與預建 R3（陳小美）相同但駕駛姓名不同 → 同駕駛身分證不同姓名，歸「與既有重複」
-    must(/可新增 1 筆/.test(stats) && /與既有資料重複 3 筆/.test(stats) && /檔內重複 1 筆/.test(stats) && /格式錯誤 1 筆/.test(stats), `${ext} 預覽統計與預期（1/3/1/1）不符：${stats}`)
+  const confirm = () => page.getByRole('button', { name: '確認匯入' })
+  const replaceDialog = () => dialog(page, '確認替換整份名單？')
+  // 含錯誤的檔：可匯入 3、檔內重複 1、整列相同 1、格式錯誤 1
+  const expectBlockedStats = (ext, stats) =>
+    must(
+      /可匯入 3 筆/.test(stats) && /檔內重複 1 筆/.test(stats) && /整列相同 1 筆/.test(stats) && /格式錯誤 1 筆/.test(stats),
+      `${ext} 預覽統計與預期（3/1/1/1）不符：${stats}`,
+    )
+  const expectBlocked = async (s, ext) => {
+    const stats = await page.getByRole('group', { name: '預覽統計' }).innerText()
+    s.note(stats.replace(/\s+/g, ' '))
+    expectBlockedStats(ext, stats)
+    must(await isAriaDisabled(confirm()), `${ext}：有格式錯誤時「確認匯入」應為 aria-disabled=true`)
+    must((await page.getByText(/將刪除目前/).count()) === 0, `${ext}：被擋下的預覽不該出現「將刪除目前…」`)
+    must((await page.getByRole('radio').count()) === 0, `${ext}：匯入畫面不該有任何選項（radio）`)
+    // 點了也不會跳出二次確認
+    // aria-disabled 會讓 Playwright 的可操作性檢查一直等待；用 force 真的點下去，驗證 onClick 防護
+    await confirm().click({ force: true })
+    must((await replaceDialog().count()) === 0, `${ext}：不可確認時不該跳出二次確認框`)
+  }
 
   await step('17', '匯入-選擇檔案', page, async (s) => {
     await nav(page, '資料')
@@ -462,53 +488,95 @@ async function groupImport(browser, files) {
   })
 
   for (const [n, ext] of [['18', 'xls'], ['19', 'csv']]) {
-    await step(n, `匯入預覽-${ext}`, page, async (s) => {
+    await step(n, `匯入預覽（含格式錯誤，被擋下）-${ext}`, page, async (s) => {
       await toPreview(page, files[ext])
-      const stats = await page.getByRole('group', { name: '預覽統計' }).innerText()
-      s.note(stats.replace(/\s+/g, ' '))
-      expect2211(ext, stats)
+      await expectBlocked(s, ext)
       await s.shoot()
     })
   }
 
-  await step('20', '匯入預覽-xlsx', page, async (s) => {
+  await step('20', '匯入預覽（含格式錯誤，被擋下）-xlsx', page, async (s) => {
     await toPreview(page, files.xlsx)
+    await expectBlocked(s, 'xlsx')
+    await page.getByRole('group', { name: '整列相同的列' }).waitFor()
+    await page.getByText(/整份不會匯入，所以不能確認/).waitFor() // 說明不能確認的原因
+    await s.shoot()
+    await s.axe('import-preview-blocked')
+    await nav(page, '名單')
+    await page.getByText(/共 3 筆/).waitFor() // 被擋下：名單仍是原本的 3 筆
+    s.note('被擋下後名單仍共 3 筆')
+  })
+
+  await step('21', '匯入預覽（無錯誤）-寫明將刪除／匯入', page, async (s) => {
+    await toPreview(page, files.clean)
     const stats = await page.getByRole('group', { name: '預覽統計' }).innerText()
     s.note(stats.replace(/\s+/g, ' '))
-    expect2211('xlsx', stats)
+    must(/可匯入 3 筆/.test(stats) && /檔內重複 1 筆/.test(stats) && /整列相同 1 筆/.test(stats) && /格式錯誤 0 筆/.test(stats), `乾淨檔預覽統計與預期（3/1/1/0）不符：${stats}`)
+    await page.getByText('將刪除目前 3 筆、匯入 4 筆').waitFor()
     await page.getByRole('group', { name: '整列相同的列' }).waitFor()
-    const confirm = page.getByRole('button', { name: '確認匯入' })
-    must(await isAriaDisabled(confirm), '有重複且尚未選匯入方式時「確認匯入」應為 aria-disabled=true')
-    s.note('未選方式時「確認匯入」aria-disabled＝true')
+    must(!(await isAriaDisabled(confirm())), '無格式錯誤時「確認匯入」不應為 aria-disabled')
+    must((await page.getByRole('radio').count()) === 0, '匯入畫面不該有任何選項（radio）')
     await s.shoot()
     await s.axe('import-preview')
   })
 
-  await step('21', '匯入預覽-選照樣匯入', page, async (s) => {
-    await toPreview(page, files.xlsx)
-    await page.getByRole('radio', { name: '照樣匯入' }).check()
-    must(!(await isAriaDisabled(page.getByRole('button', { name: '確認匯入' }))), '選擇方式後「確認匯入」不應為 aria-disabled')
+  await step('21a', '二次確認-預設焦點取消，取消後名單不變', page, async (s) => {
+    await toPreview(page, files.clean)
+    await confirm().click()
+    await replaceDialog().waitFor()
+    const focused = await page.evaluate(() => ({ tag: document.activeElement?.tagName, text: document.activeElement?.textContent?.trim(), inDialog: !!document.activeElement?.closest('dialog') }))
+    must(focused.inDialog && focused.text === '取消', `二次確認框預設焦點應在「取消」，實得：${JSON.stringify(focused)}`)
+    s.note('預設焦點＝取消')
     await s.shoot()
+    await s.axe('import-confirm-dialog')
+    await replaceDialog().getByRole('button', { name: '取消' }).click()
+    await replaceDialog().waitFor({ state: 'detached' })
+    await nav(page, '名單')
+    await page.getByText(/共 3 筆/).waitFor()
+    s.note('取消後名單仍共 3 筆')
   })
 
-  await step('22', '匯入結果', page, async (s) => {
-    await toPreview(page, files.xlsx)
-    await page.getByRole('radio', { name: '照樣匯入' }).check()
-    await page.getByRole('button', { name: '確認匯入' }).click()
-    // a11y 修正後結果放在常駐 aria-live 容器（非 role=status）
+  await step('21b', '二次確認-先匯出目前資料，名單不變、對話框仍在', page, async (s) => {
+    await toPreview(page, files.clean)
+    await confirm().click()
+    await replaceDialog().waitFor()
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }), replaceDialog().getByRole('button', { name: '先匯出目前資料' }).click()])
+    const dest = join(DOWNLOADS, `before-replace-${dl.suggestedFilename()}`)
+    await dl.saveAs(dest)
+    must(dl.suggestedFilename().toLowerCase().endsWith('.xlsx'), `先匯出預設應為 .xlsx：${dl.suggestedFilename()}`)
+    must(statSync(dest).size > 0, `${dl.suggestedFilename()} 為空檔`)
+    s.note(`${dl.suggestedFilename()}（${statSync(dest).size} bytes）`)
+    await replaceDialog().getByText(/已匯出 3 筆資料/).waitFor()
+    must((await replaceDialog().count()) === 1, '先匯出後二次確認框應仍開著')
+    await s.shoot()
+    await replaceDialog().getByRole('button', { name: '取消' }).click()
+    await nav(page, '名單')
+    await page.getByText(/共 3 筆/).waitFor()
+    s.note('先匯出後名單仍共 3 筆')
+  })
+
+  await step('22', '替換結果', page, async (s) => {
+    await toPreview(page, files.clean)
+    await confirm().click()
+    await replaceDialog().getByRole('button', { name: '確認替換' }).click()
+    // 結果放在常駐 aria-live 容器（非 role=status）
     const res = page.getByText(/匯入完成/).first()
     await res.waitFor()
     const text = (await res.innerText()).replace(/\s+/g, ' ')
     s.note(text)
-    must(/已匯入 3 筆/.test(text) && /略過 2 筆/.test(text), `預期照樣匯入 3 筆（第 3 列新增＋第 5 列同車頭車號＋第 7 列同駕駛身分證不同姓名）、略過 2 筆（整列相同 2 列），實得：${text}`)
+    must(/已刪除 3 筆/.test(text) && /已匯入 4 筆/.test(text), `預期已刪除 3 筆（原名單）、已匯入 4 筆（5 列資料 − 1 筆整列相同合併），實得：${text}`)
+    await page.getByText(/合併 1 筆整列相同/).waitFor()
     await s.shoot()
     await s.axe('import-result')
   })
 
-  await step('23', '匯入後名單', page, async (s) => {
+  await step('23', '替換後名單＝檔案內容，檔內重複持續標示', page, async (s) => {
     await nav(page, '名單')
-    await page.getByText(/共 6 筆/).waitFor()
+    await page.getByText(/共 4 筆/).waitFor() // 檔案 5 列 − 合併 1 ＝ 4，原名單 3 筆已全部取代
+    must((await page.getByText(R2.name).count()) === 0, `原名單的「${R2.name}」應已被替換掉`)
+    must((await page.getByText('同車頭車號').count()) > 0, '檔內重複（同車頭車號）的兩筆資料在名單上應持續標示')
     await s.shoot()
+    s.note('替換後共 4 筆')
   })
   await context.close()
 }

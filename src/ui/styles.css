@@ -159,6 +159,8 @@ dl.four dd{margin:2px 0 0}
 .st dt{font-size:.875rem;font-weight:700}
 .st dd{margin:4px 0 0;font-size:2rem;font-weight:700;line-height:1.1}
 .sumline{margin:6px 0 10px}
+.replaceline{margin:6px 0 10px}
+.replaceline strong{margin-right:.4em}
 .idflag{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .same{margin:6px 0 0;padding-left:1.2em}
 .cat{margin:10px 0}

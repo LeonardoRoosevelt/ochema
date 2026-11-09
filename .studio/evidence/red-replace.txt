@@ -1,0 +1,1359 @@
+# 紅燈證據：匯入改為整份替換（2026-11-09）
+# 狀態：契約 docs/data-contract.md 已更新；types.ts 已是新型別；tests/steps、tests/support、tests/data、tests/qa、tests/ui 已改為新語意；
+#       src/data/importer.ts 的新 API 是會丟 "not implemented: <名稱>" 的 stub（injectImportWriteFault 亦同）；
+#       src/ui/ImportView.tsx 仍是舊實作（尚未遷移）。
+# 預期的失敗種類：
+#   1. Error: not implemented: previewImport / buildPreview / injectImportWriteFault（資料層未實作）
+#   2. TypeError: row.existingConflicts is not iterable（舊 ImportView 吃新的預覽形狀＝UI 未實作）；
+#      元件測試找不到 dialog「確認替換整份名單？」、aria-disabled 等＝UI 斷言不成立
+#   3. offline-use「vite build 失敗」：舊 ImportView 仍 import 已移除的 commitImport（UI 未遷移的連帶結果）
+#   4. 少數 @ui 情境斷言不成立（例如名單列數、舊 radio 不存在）
+# 綁定檢查：scripts/bdd-dryrun.sh exit 0（無缺 step、無重複綁定、無死碼 step）；tests/stepBinding.test.ts 15/15 通過。
+# 注意：vitest 在同情境前面步驟失敗後，後面步驟標為 skipped（runFeature 設計），所以 skipped 數很大。
+=== scripts/bdd-dryrun.sh ===
+dryrun exit: 0
+
+=== npx vitest run ===
+
+ RUN  v5.1.0 /Users/leonardoroosevelt/Project/ochema
+
+stderr | tests/ui/importView.test.tsx > 預覽畫面 > 寫明「將刪除目前 N 筆、匯入 M 筆」，四類統計，整列相同合併告知；沒有任何處理重複的選項
+An error occurred in the <CategoryTable> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+ ❯ tests/steps/offline-use.steps.ts (41 tests | 1 failed | 40 skipped) 996ms
+   ❯ Feature: 離線使用與本機資料 (41)
+     ❯ Scenario: 建置產物預先快取 App 外殼與所有執行時資源 (5)
+       × Given 已完成正式建置 988ms
+ ❯ tests/steps/search.steps.ts (37 tests | 1 failed | 2 skipped) 1384ms
+   ❯ Feature: 查詢名單 (37)
+     ❯ Scenario: 在查詢結果中編輯後，查詢條件保持 (4)
+       × When 我把車頭車號 "929-X2" 那筆的駕駛姓名改成 "王小美" 並儲存 8ms
+stderr | tests/ui/importView.test.tsx > 二次確認框 > 按「確認匯入」跳出原生 dialog，預設焦點在「取消」，此時尚未替換
+An error occurred in the <CategoryTable> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+ ❯ tests/qa/csv-weird-input.test.ts (36 tests | 2 failed | 2 todo) 609ms
+   ❯ readImportFile：CSV 列規則（gridToRawRows） (16)
+     × 只有標題列：ok 且 rows 為空；previewImport 回報 total=0 4ms
+     × 格式錯誤的列照常讀出，錯誤留給預覽分類：短列→REQUIRED、全形車牌→PLATE_FULLWIDTH 0ms
+stderr | tests/ui/importView.test.tsx > 二次確認框 > 名單是空的（將刪除 0 筆）也要二次確認
+An error occurred in the <CategoryTable> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+ ❯ tests/steps/record-management.steps.ts (73 tests | 1 failed | 64 skipped) 627ms
+   ❯ Feature: 名單管理 (73)
+     ❯ Scenario: 必填欄位留空時不能存檔 ［範例 1｜車頭車號］ (5)
+       × And 名單上有 0 筆資料 5ms
+stderr | tests/ui/importView.test.tsx > 二次確認框 > 取消：對話框關閉、不呼叫替換、預覽仍在、焦點回到「確認匯入」
+An error occurred in the <CategoryTable> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+ ❯ tests/steps/excel-export.steps.ts (184 tests | 1 failed | 179 skipped) 142ms
+   ❯ Feature: Excel 匯出 (184)
+     ❯ Scenario: 所有值以文字保留，前導 0 不消失 (5)
+       × Given 名單上有以下資料： 5ms
+stderr | tests/ui/importView.test.tsx > 二次確認框 > 先匯出目前資料：匯出全部、預設 .xlsx，交給下載；對話框仍開著、不呼叫替換
+An error occurred in the <CategoryTable> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+ ❯ tests/qa/records-concurrency.test.ts (31 tests | 2 failed | 2 todo) 355ms
+   ❯ 並行新增（ConstraintError 不成為未處理的 rejection） (9)
+     × 新增與匯入同一整列並行：不管誰先，最後只有 1 筆，且沒有 unhandled rejection 9ms
+     × 同一份預覽被提交兩次（使用者連按兩下「確認替換」），名單仍是檔案內容、沒有重複列 16ms
+stderr | tests/ui/importView.test.tsx > 二次確認框 > 先匯出失敗：對話框內告知，仍不替換
+An error occurred in the <CategoryTable> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+ ❯ tests/steps/excel-import.steps.ts (572 tests | 1 failed | 569 skipped) 98ms
+   ❯ Feature: Excel 匯入 (572)
+     ❯ Scenario: 預覽：檔案內容全部都能匯入 (5)
+       × When 我預覽匯入這份檔案 26ms
+ ❯ tests/steps/field-validation.steps.ts (83 tests | 1 failed | 9 skipped) 118ms
+   ❯ Feature: 欄位格式檢查 (83)
+     ❯ Scenario: 名單上標示駕駛身分證有警示的資料 (4)
+       × Given 名單上有一筆資料：車頭車號 "929-X2"、車斗車號 "20-9A"、駕駛姓名 "王小明"、駕駛身分證 "AB12345678" 2ms
+stderr | tests/ui/importView.test.tsx > 二次確認框 > 確認替換：把預覽交給資料層，顯示「已刪除 N 筆、已匯入 M 筆」與合併筆數，並通知外層重新載入
+An error occurred in the <CategoryTable> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+stderr | tests/ui/importView.test.tsx > 二次確認框 > 寫入失敗：對話框關閉，預覽仍在並告知「名單沒有任何變更」
+An error occurred in the <CategoryTable> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+
+ ❯ tests/ui/importView.test.tsx (10 tests | 9 failed) 8299ms
+   ❯ 預覽畫面 (3)
+     × 寫明「將刪除目前 N 筆、匯入 M 筆」，四類統計，整列相同合併告知；沒有任何處理重複的選項 1172ms
+     × 有格式錯誤：「確認匯入」aria-disabled、可聚焦、說明原因；點了不會跳二次確認；不顯示「將刪除」 24ms
+   ❯ 二次確認框 (7)
+     × 按「確認匯入」跳出原生 dialog，預設焦點在「取消」，此時尚未替換 1007ms
+     × 名單是空的（將刪除 0 筆）也要二次確認 1010ms
+     × 取消：對話框關閉、不呼叫替換、預覽仍在、焦點回到「確認匯入」 1011ms
+     × 先匯出目前資料：匯出全部、預設 .xlsx，交給下載；對話框仍開著、不呼叫替換 1030ms
+     × 先匯出失敗：對話框內告知，仍不替換 1006ms
+     × 確認替換：把預覽交給資料層，顯示「已刪除 N 筆、已匯入 M 筆」與合併筆數，並通知外層重新載入 1011ms
+     × 寫入失敗：對話框關閉，預覽仍在並告知「名單沒有任何變更」 1013ms
+ ❯ tests/steps/duplicate-detection.steps.ts (120 tests | 1 failed | 116 skipped) 56ms
+   ❯ Feature: 重複資料偵測 (120)
+     ❯ Scenario: 同一車斗車號出現在多筆資料 (3)
+       × Given 名單上有以下資料： 4ms
+ ❯ tests/data/importer.test.ts (18 tests | 18 failed) 22ms
+   ❯ buildPreview：分類優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（契約 §3.5） (7)
+     × 格式錯誤的列不當「較前面的列」：後面同車頭車號的有效列仍是 NEW 9ms
+     × 格式錯誤列與後面的列四欄相同，兩列都是格式錯誤，不會被當成整列相同合併 1ms
+     × 格式錯誤列不計算駕駛身分證警示與重複種類，error 取第一個不合的欄位 0ms
+     × 整列相同優先於檔內重複，且不計入檔內重複；identicalTo 指向最早出現者 1ms
+     × 連鎖：第 3 列是檔內重複（同車頭車號）、第 4 列與第 3 列整列相同 → 第 4 列歸整列相同並合併 2ms
+     × kinds 固定順序 SAME_HEAD, SAME_TAIL, SAME_ID_DIFF_NAME，不受檔內較前面列的順序影響 0ms
+     × 同一人多車（同身分證同姓名）不算重複 0ms
+   ❯ buildPreview：將刪除／將匯入／合併／可否確認 (3)
+     × willDelete＝傳入的目前筆數；willImport＝可匯入＋檔內重複；整列相同不計入 0ms
+     × 只要有一列格式錯誤就不可確認；沒有資料列也不可確認 0ms
+     × 駕駛身分證不合格只警示，類別不變、仍可確認 0ms
+   ❯ replaceAllFromImport (8)
+     × 清掉既有資料，依檔案順序寫入；id 順序＝檔案列序；回報已刪除／已匯入／合併 1ms
+     × deleted 以交易內實際筆數為準（預覽之後名單又變了） 0ms
+     × 檔內重複（非整列相同）照樣寫入 1ms
+     × 有格式錯誤列：拒絕（FORMAT_ERRORS），名單原封不動 1ms
+     × 沒有資料列：拒絕（NOTHING_TO_IMPORT），不會把名單清空 1ms
+     × 單一交易：寫入第 1 筆之後失敗 → WRITE_FAILED，clear 也一併回滾 1ms
+     × 注入的失敗是一次性的：下一次替換正常成功 1ms
+     × 空名單匯入：deleted 為 0 1ms
+ ❯ tests/qa/import-export-scale.test.ts (36 tests | 11 failed | 3 todo) 15783ms
+   ❯ 大檔匯入（5000 列） (6)
+     × xlsx：全是新資料 → 預覽全 NEW；提交後 id 順序＝檔案列序；耗時在寬鬆上限內 112ms
+     × xls：全是新資料 → 預覽全 NEW；提交後 id 順序＝檔案列序；耗時在寬鬆上限內 255ms
+     × csv：全是新資料 → 預覽全 NEW；提交後 id 順序＝檔案列序；耗時在寬鬆上限內 17ms
+     × csv 最壞情況：5,000 列全部同車頭車號（每列都要與前面所有列比對）→ 全是 DUP_IN_FILE（第一列 NEW），照樣匯入，耗時在上限內 11ms
+     × csv：5,000 列中混入整列相同、檔內重複、格式錯誤 → 四類相加＝total；有格式錯誤整份擋下且名單不動，修掉錯誤列後替換成功 15ms
+   ❯ 三格式匯出 → 讀回（往返） (21)
+     × xlsx：經資料庫完整往返（exportRecords → previewImport → replaceAllFromImport）後四欄與順序完全還原 28ms
+     × xls：經資料庫完整往返（exportRecords → previewImport → replaceAllFromImport）後四欄與順序完全還原 23ms
+     × csv：經資料庫完整往返（exportRecords → previewImport → replaceAllFromImport）後四欄與順序完全還原 37ms
+     × xlsx：空名單只有標題列，可讀回且 total=0 2ms
+     × xls：空名單只有標題列，可讀回且 total=0 1ms
+     × csv：空名單只有標題列，可讀回且 total=0 5ms
+
+⎯⎯⎯⎯⎯ Failed Suites 240 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一車頭車號出現在多筆資料
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一車斗車號出現在多筆資料
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一駕駛身分證對應到不同駕駛姓名
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一人擁有多台車不算重複
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 沒有重複的名單
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 只有一筆資料時不會與自己重複
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 一筆資料同時符合多種重複
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 三筆共用同一車頭車號視為同一組
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 比對為原樣比對，不同的字串不算重複
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 1｜929-X2｜30-1B｜李美玲］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 2｜929-X3｜20-9A｜李美玲］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 3｜929-X3｜30-1B｜王小名］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 1｜929-X2｜OL-02｜李美玲］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 2｜KLP-7988｜20-9A｜李美玲］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 3｜KLP-7988｜OL-02｜李美玲］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增與既有資料四欄完全相同的整列時擋下，資料不變 ［範例 1｜929-X2｜20-9A｜王小明］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增前後空白去除後與既有資料四欄完全相同的整列時擋下，資料不變
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯成與另一筆四欄完全相同的整列時擋下，被編輯的資料不變
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增不造成重複時不顯示重複通知
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯已在重複組內的資料但沒動衝突欄位，不與自己比對也不誤報新的重複
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 名單上持續標示有重複的資料
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 重複標示在重新開啟 App 後仍在
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 刪除其中一筆後，另一筆的重複標示消失
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 1｜929-X2｜30-1B｜李美玲］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 2｜KLP-7988｜20-9A｜李美玲］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 3｜KLP-7988｜OL-02｜王小名］
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 三筆同組其中一筆改掉後，剩下兩筆仍標示重複
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 總覽集中顯示所有重複與警示
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 沒有任何重複或警示時總覽顯示無問題
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 匯出檔的標題與欄位順序
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 所有值以文字保留，前導 0 不消失
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 重複與警示的資料也如實匯出
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 匯出後再匯入能完整還原
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單之後被改成別的內容，匯入匯出檔仍直接還原成匯出前的名單
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 含重複的名單匯出再匯入仍能完整還原
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時匯出只有標題列的範本檔
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 含特殊字元的駕駛姓名原樣匯出
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 在畫面上匯出並取得檔案
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時在畫面上匯出，取得只有標題列的範本檔
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 查詢結果篩選中時，匯出仍是全部資料
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 1｜.xlsx］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 2｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 3｜CSV］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 1｜.xlsx］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 2｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 3｜CSV］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: CSV 匯出為帶 BOM 的 UTF-8
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: CSV 匯出時，含逗號與引號的值以引號包住並原樣還原
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出後再匯入能完整還原 ［範例 1｜.xlsx］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出後再匯入能完整還原 ［範例 2｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出後再匯入能完整還原 ［範例 3｜CSV］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含重複的名單再匯入仍能完整還原 ［範例 1｜.xlsx］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含重複的名單再匯入仍能完整還原 ［範例 2｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含重複的名單再匯入仍能完整還原 ［範例 3｜CSV］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 1｜.xlsx］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 2｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 3｜CSV］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 1｜.xlsx］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 2｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 3｜CSV］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含特殊字元的駕駛姓名都原樣保留 ［範例 1｜.xlsx］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含特殊字元的駕駛姓名都原樣保留 ［範例 2｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含特殊字元的駕駛姓名都原樣保留 ［範例 3｜CSV］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 沒有另外選擇格式直接匯出，預設取得 .xlsx 檔案
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 1｜.xlsx］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 2｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 3｜CSV］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 查詢結果篩選中時，各格式匯出仍是全部資料 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 查詢結果篩選中時，各格式匯出仍是全部資料 ［範例 2｜CSV］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔案內容全部都能匯入
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔內重複，第一次出現者算可匯入、其餘算檔內重複（仍會匯入） ［範例 1｜929-X2｜20-9A｜王小明］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔內重複，第一次出現者算可匯入、其餘算檔內重複（仍會匯入） ［範例 2｜929-X2｜20-9A｜王小明］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔內重複，第一次出現者算可匯入、其餘算檔內重複（仍會匯入） ［範例 3｜929-X2｜20-9A｜王小明］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：每一列只屬於一類，各類筆數相加等於資料列數，且沒有其他分類
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：同一人多台車的列不算重複
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 ［範例 1｜klp-7988｜OL-02｜李美玲］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 ［範例 2｜KLP-7988｜ol-02｜李美玲］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 ［範例 3｜KLP-7988｜OL02｜李美玲］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 ［範例 4｜KLP-7988｜A-B-C｜李美玲］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 ［範例 5｜KLP- 7988｜OL-02｜李美玲］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 ［範例 6｜KLP-7988｜OL-02｜F131104093］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 ［範例 7｜KLP-7988｜OL-02｜李美玲］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列，整份擋下 ［範例 8｜OL-02｜李美玲｜F131104093］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：單獨列出整列相同的列，告知將合併為一筆
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 整列相同的列合併為一筆，只保留第一次出現者
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：寫明將刪除目前幾筆、匯入幾筆
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 替換成功：既有資料被檔案內容取代，原有資料不再存在
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 名單為空時匯入：刪除 0 筆，檔案內容全部寫入
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案含格式錯誤列時不可確認，名單不變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 小寫車牌不會被自動轉成大寫，整份擋下、名單不變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 前後空白自動去除後再檢查與比對
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 只含空白的儲存格視為留空
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 數字型儲存格讀取顯示的文字 ［範例 1｜7｜007］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 數字型儲存格讀取顯示的文字 ［範例 2｜7｜7］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 數字型儲存格的值不符車牌格式時為錯誤列
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：駕駛身分證不合格的列只警示，仍可匯入並照常寫入
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：一列同時有格式錯誤與重複時，以格式錯誤為準
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔內的同車頭車號、同車斗車號、同駕駛身分證不同姓名，兩列都一併匯入 ［範例 1｜929-X2｜20-9A｜王小明］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔內的同車頭車號、同車斗車號、同駕駛身分證不同姓名，兩列都一併匯入 ［範例 2｜929-X2｜20-9A｜王小明］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔內的同車頭車號、同車斗車號、同駕駛身分證不同姓名，兩列都一併匯入 ［範例 3｜929-X2｜20-9A｜王小明］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 手動新增的資料在下次匯入後被覆蓋
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 替換為單一交易：寫入失敗時名單維持原狀
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 缺少必要的欄位標題時整份檔案不接受，名單不變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 使用舊欄位標題（車頭、車尾、姓名、身分證）的檔案不接受，告知缺少欄位標題
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 欄位順序與匯出不同，仍依標題對應
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 只有標題列、沒有資料列的檔案：不替換，名單不變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 完全空白的檔案：不替換，名單不變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 不是 Excel 的檔案：不替換，名單不變 ［範例 1｜內容是隨機二進位資料的檔案］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 不是 Excel 的檔案：不替換，名單不變 ［範例 2｜副檔名是 .xlsx 但內容已損毀的檔案］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽後放棄，名單不變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽不提供任何重複處理的選項
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上預覽、二次確認並替換成功
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇含格式錯誤的檔案：預覽列出錯誤，確認匯入不可用
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 二次確認框中按取消，名單不變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 二次確認框中可先匯出目前資料，名單仍未變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 替換後，檔內重複的資料在名單與總覽持續標示
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 舊式 .xls 檔可預覽並替換
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: .xls 的數字型儲存格同樣讀取顯示的文字 ［範例 1｜7｜007］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: .xls 的數字型儲存格同樣讀取顯示的文字 ［範例 2｜7｜7］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: UTF-8 CSV 可預覽並匯入，不論有無 BOM；前導 0 保留為字串 ［範例 1｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: UTF-8 CSV 可預覽並匯入，不論有無 BOM；前導 0 保留為字串 ［範例 2｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: CSV 的欄位內含逗號、被引號包住的欄位依規則解析 ［範例 1｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: CSV 的欄位內含逗號、被引號包住的欄位依規則解析 ［範例 2｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 非 UTF-8 的 CSV 不接受，提示以 CSV UTF-8 另存，名單不變 ［範例 1｜內容為一列資料：車頭車號 "929-X3"、車斗車號 "20-9B"、駕駛姓名 "李美玲"、駕駛］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 非 UTF-8 的 CSV 不接受，提示以 CSV UTF-8 另存，名單不變 ［範例 2｜資料列的駕駛姓名含有中文字，其位元組不是合法的 UTF-8］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取，名單不變 ［範例 1｜副檔名是 .csv 但內容是隨機二進位資料的檔案］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取，名單不變 ［範例 2｜副檔名是 .xls、開頭為 D0 CF 11 E0 但內容被截斷的檔案］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取，名單不變 ［範例 3｜副檔名是 .csv 但內容含有 NUL 位元組的檔案］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案格式依內容判定，不看副檔名 ［範例 1｜.xlsx｜UTF-8 CSV］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案格式依內容判定，不看副檔名 ［範例 2｜.csv｜.xlsx］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案格式依內容判定，不看副檔名 ［範例 3｜.csv｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案格式依內容判定，不看副檔名 ［範例 4｜.xls｜.xlsx］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的預覽分類規則一致 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的預覽分類規則一致 ［範例 2｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的預覽分類規則一致 ［範例 3｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的整份替換規則一致 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的整份替換規則一致 ［範例 2｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的整份替換規則一致 ［範例 3｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式含格式錯誤列時整份擋下，名單不變 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式含格式錯誤列時整份擋下，名單不變 ［範例 2｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式含格式錯誤列時整份擋下，名單不變 ［範例 3｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 2｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 3｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受，名單不變 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受，名單不變 ［範例 2｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受，名單不變 ［範例 3｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料，名單不變 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料，名單不變 ［範例 2｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料，名單不變 ［範例 3｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的，名單不變 ［範例 1｜有效但沒有任何儲存格內容的 .xls 檔］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的，名單不變 ［範例 2｜0 位元組的 .xls 檔］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的，名單不變 ［範例 3｜0 位元組的 CSV 檔］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的，名單不變 ［範例 4｜只有 BOM、沒有任何其他內容的 CSV 檔］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 2｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 3｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 合法 UTF-8 的純文字檔（非表格）依 CSV 讀取，因缺標題被拒絕，名單不變
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: CSV 某列欄位少於標題列時，缺的欄位視為空白，必填缺漏成為格式錯誤
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: CSV 某列欄位多於標題列時，多出的欄位忽略，該列照常處理
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽、二次確認並替換 ［範例 1｜.xls］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽、二次確認並替換 ［範例 2｜CSV（有 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽、二次確認並替換 ［範例 3｜CSV（無 BOM）］
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇 Big5 編碼的 CSV 檔，畫面提示以 CSV UTF-8 另存
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 1｜929-X2］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 2｜KLP-7988］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 3｜20-9A］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 4｜OL-02］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 5｜A-1］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 6｜0012-007］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 1｜klp-7988｜PLATE_LOWERCASE］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 2｜Klp-7988｜PLATE_LOWERCASE］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 3｜ＫＬＰ-7988｜PLATE_FULLWIDTH］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 4｜929－X2｜PLATE_FULLWIDTH］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 5｜９２９-X2｜PLATE_FULLWIDTH］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 6｜929X2｜PLATE_NO_HYPHEN］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 7｜929-X2-1｜PLATE_MULTI_HYPHEN］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 8｜-X2｜PLATE_EMPTY_PART］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 9｜929-｜PLATE_EMPTY_PART］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 10｜929 -X2｜PLATE_INNER_WHITESPACE］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 11｜9 29-X2｜PLATE_INNER_WHITESPACE］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 12｜929_X2｜PLATE_INVALID_CHAR］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 13｜929.X2｜PLATE_INVALID_CHAR］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 14｜REQUIRED］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 車牌前後空白先去除再檢查
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證前後空白先去除再檢查
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證檢查碼正確則不警示 ［範例 1｜A123456789｜一般駕駛身分證］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證檢查碼正確則不警示 ［範例 2｜F131104093｜一般駕駛身分證］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證檢查碼正確則不警示 ［範例 3｜A800000014｜新式居留證，第二碼 8］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證檢查碼正確則不警示 ［範例 4｜B900000017｜新式居留證，第二碼 9］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證不合格只警示，不阻擋 ［範例 1｜A123456788｜ID_CHECKSUM］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證不合格只警示，不阻擋 ［範例 2｜A12345678｜ID_LENGTH］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證不合格只警示，不阻擋 ［範例 3｜A1234567890｜ID_LENGTH］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證不合格只警示，不阻擋 ［範例 4｜a123456789｜ID_LOWERCASE］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證不合格只警示，不阻擋 ［範例 5｜1123456789｜ID_FIRST_NOT_ALPHA］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證不合格只警示，不阻擋 ［範例 6｜A12345678X｜ID_NON_DIGIT］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證不合格只警示，不阻擋 ［範例 7｜AB12345678｜ID_LEGACY_RESIDENCE］
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 名單上標示駕駛身分證有警示的資料
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 修正駕駛身分證後警示消失
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 駕駛身分證中間含空白只警示，不阻擋
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 建置產物預先快取 App 外殼與所有執行時資源
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 執行時所需資源不依賴外部網址
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 建置產物具備可安裝的 Web App 資訊
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 新版本更新期間不中斷目前操作，也不遺失資料
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 無網路時仍可查詢
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 無網路時仍可新增
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 無網路時仍可匯出
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 無網路時仍可預覽、二次確認並匯入 Excel
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 所有操作都不對外發出網路請求
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 畫面說明資料只存在這台裝置並提醒備份
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 新增一筆合格的資料
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 1｜車頭車號］
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 2｜車斗車號］
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 3｜駕駛姓名］
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 4｜駕駛身分證］
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 只含空白的欄位視為留空
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 小寫車牌擋下並說明原因，不自動轉成大寫
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 車牌中間含空白仍算格式錯誤並擋下
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 前後空白自動去除後存檔
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 編輯時前後空白同樣自動去除
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 駕駛身分證不合格只警示，仍可存檔
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 編輯既有資料並儲存
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 編輯時把車牌改成不合格格式會被擋下，原資料不變
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 編輯後放棄修改
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 刪除資料前須確認
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 刪除時取消確認，資料保留
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 重新開啟 App 後資料仍在
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 名單為空時顯示空狀態
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 以任一欄位的部分文字查詢 ［範例 1｜7988｜"KLP-7988"］
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 以任一欄位的部分文字查詢 ［範例 2｜20-9｜"929-X2"、"5566-AB"］
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 以任一欄位的部分文字查詢 ［範例 3｜王｜"929-X2"、"5566-AB"］
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 以任一欄位的部分文字查詢 ［範例 4｜F131｜"KLP-7988"］
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 以任一欄位的部分文字查詢 ［範例 5｜OL-02｜"KLP-7988"］
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 查詢不分大小寫
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 查無符合時顯示沒有結果
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 清除關鍵字後回到完整名單
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 關鍵字前後的空白會被忽略
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 駕駛身分證在查詢結果中完整顯示
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 在查詢結果中編輯後，查詢條件保持
+Error: not implemented: injectImportWriteFault
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ injectImportWriteFault src/data/importer.ts:21:3
+ ❯ resetWorld tests/support/world.ts:119:3
+ ❯ tests/support/runFeature.ts:46:29
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:146:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/289]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 49 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：分類優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（契約 §3.5） > 格式錯誤的列不當「較前面的列」：後面同車頭車號的有效列仍是 NEW
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:15:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：分類優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（契約 §3.5） > 格式錯誤列與後面的列四欄相同，兩列都是格式錯誤，不會被當成整列相同合併
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:26:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：分類優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（契約 §3.5） > 格式錯誤列不計算駕駛身分證警示與重複種類，error 取第一個不合的欄位
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:33:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：分類優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（契約 §3.5） > 整列相同優先於檔內重複，且不計入檔內重複；identicalTo 指向最早出現者
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:43:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：分類優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（契約 §3.5） > 連鎖：第 3 列是檔內重複（同車頭車號）、第 4 列與第 3 列整列相同 → 第 4 列歸整列相同並合併
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:55:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：分類優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（契約 §3.5） > kinds 固定順序 SAME_HEAD, SAME_TAIL, SAME_ID_DIFF_NAME，不受檔內較前面列的順序影響
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:65:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：分類優先序 FORMAT_ERROR > IDENTICAL_IN_FILE > DUP_IN_FILE > NEW（契約 §3.5） > 同一人多車（同身分證同姓名）不算重複
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:79:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：將刪除／將匯入／合併／可否確認 > willDelete＝傳入的目前筆數；willImport＝可匯入＋檔內重複；整列相同不計入
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:86:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：將刪除／將匯入／合併／可否確認 > 只要有一列格式錯誤就不可確認；沒有資料列也不可確認
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:97:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/289]⎯
+
+ FAIL  tests/data/importer.test.ts > buildPreview：將刪除／將匯入／合併／可否確認 > 駕駛身分證不合格只警示，類別不變、仍可確認
+Error: not implemented: buildPreview
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ buildPreview src/data/importer.ts:9:10
+ ❯ tests/data/importer.test.ts:104:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/289]⎯
+
+ FAIL  tests/data/importer.test.ts > replaceAllFromImport > 清掉既有資料，依檔案順序寫入；id 順序＝檔案列序；回報已刪除／已匯入／合併
+ FAIL  tests/data/importer.test.ts > replaceAllFromImport > deleted 以交易內實際筆數為準（預覽之後名單又變了）
+ FAIL  tests/data/importer.test.ts > replaceAllFromImport > 檔內重複（非整列相同）照樣寫入
+ FAIL  tests/data/importer.test.ts > replaceAllFromImport > 有格式錯誤列：拒絕（FORMAT_ERRORS），名單原封不動
+ FAIL  tests/data/importer.test.ts > replaceAllFromImport > 沒有資料列：拒絕（NOTHING_TO_IMPORT），不會把名單清空
+ FAIL  tests/data/importer.test.ts > replaceAllFromImport > 單一交易：寫入第 1 筆之後失敗 → WRITE_FAILED，clear 也一併回滾
+ FAIL  tests/data/importer.test.ts > replaceAllFromImport > 注入的失敗是一次性的：下一次替換正常成功
+ FAIL  tests/data/importer.test.ts > replaceAllFromImport > 空名單匯入：deleted 為 0
+Error: not implemented: injectImportWriteFault
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ injectImportWriteFault src/data/importer.ts:21:3
+ ❯ tests/data/importer.test.ts:114:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/289]⎯
+
+ FAIL  tests/qa/csv-weird-input.test.ts > readImportFile：CSV 列規則（gridToRawRows） > 只有標題列：ok 且 rows 為空；previewImport 回報 total=0
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/csv-weird-input.test.ts:240:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/289]⎯
+
+ FAIL  tests/qa/csv-weird-input.test.ts > readImportFile：CSV 列規則（gridToRawRows） > 格式錯誤的列照常讀出，錯誤留給預覽分類：短列→REQUIRED、全形車牌→PLATE_FULLWIDTH
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/csv-weird-input.test.ts:250:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/289]⎯
+
+ FAIL  tests/qa/import-export-scale.test.ts > 大檔匯入（5000 列） > xlsx：全是新資料 → 預覽全 NEW；提交後 id 順序＝檔案列序；耗時在寬鬆上限內
+ FAIL  tests/qa/import-export-scale.test.ts > 大檔匯入（5000 列） > xls：全是新資料 → 預覽全 NEW；提交後 id 順序＝檔案列序；耗時在寬鬆上限內
+ FAIL  tests/qa/import-export-scale.test.ts > 大檔匯入（5000 列） > csv：全是新資料 → 預覽全 NEW；提交後 id 順序＝檔案列序；耗時在寬鬆上限內
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/import-export-scale.test.ts:51:65
+ ❯ timed tests/qa/import-export-scale.test.ts:42:23
+ ❯ tests/qa/import-export-scale.test.ts:51:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/289]⎯
+
+ FAIL  tests/qa/import-export-scale.test.ts > 大檔匯入（5000 列） > csv 最壞情況：5,000 列全部同車頭車號（每列都要與前面所有列比對）→ 全是 DUP_IN_FILE（第一列 NEW），照樣匯入，耗時在上限內
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/import-export-scale.test.ts:69:64
+ ❯ timed tests/qa/import-export-scale.test.ts:42:23
+ ❯ tests/qa/import-export-scale.test.ts:69:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/289]⎯
+
+ FAIL  tests/qa/import-export-scale.test.ts > 大檔匯入（5000 列） > csv：5,000 列中混入整列相同、檔內重複、格式錯誤 → 四類相加＝total；有格式錯誤整份擋下且名單不動，修掉錯誤列後替換成功
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/import-export-scale.test.ts:87:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/289]⎯
+
+ FAIL  tests/qa/import-export-scale.test.ts > 三格式匯出 → 讀回（往返） > xlsx：經資料庫完整往返（exportRecords → previewImport → replaceAllFromImport）後四欄與順序完全還原
+ FAIL  tests/qa/import-export-scale.test.ts > 三格式匯出 → 讀回（往返） > xls：經資料庫完整往返（exportRecords → previewImport → replaceAllFromImport）後四欄與順序完全還原
+ FAIL  tests/qa/import-export-scale.test.ts > 三格式匯出 → 讀回（往返） > csv：經資料庫完整往返（exportRecords → previewImport → replaceAllFromImport）後四欄與順序完全還原
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/import-export-scale.test.ts:165:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/289]⎯
+
+ FAIL  tests/qa/import-export-scale.test.ts > 三格式匯出 → 讀回（往返） > xlsx：空名單只有標題列，可讀回且 total=0
+ FAIL  tests/qa/import-export-scale.test.ts > 三格式匯出 → 讀回（往返） > xls：空名單只有標題列，可讀回且 total=0
+ FAIL  tests/qa/import-export-scale.test.ts > 三格式匯出 → 讀回（往返） > csv：空名單只有標題列，可讀回且 total=0
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/import-export-scale.test.ts:190:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/289]⎯
+
+ FAIL  tests/qa/records-concurrency.test.ts > 並行新增（ConstraintError 不成為未處理的 rejection） > 新增與匯入同一整列並行：不管誰先，最後只有 1 筆，且沒有 unhandled rejection
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/records-concurrency.test.ts:212:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/289]⎯
+
+ FAIL  tests/qa/records-concurrency.test.ts > 並行新增（ConstraintError 不成為未處理的 rejection） > 同一份預覽被提交兩次（使用者連按兩下「確認替換」），名單仍是檔案內容、沒有重複列
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/qa/records-concurrency.test.ts:225:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/289]⎯
+
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一車斗車號出現在多筆資料 > Given 名單上有以下資料：
+AssertionError: 名單應包含 {"headPlate":"KLP-7988","tailPlate":"20-9A","ownerName":"李美玲","idNumber":"F131104093"}: expected [ { headPlate: '929-X2', …(3) }, …(1) ] to deep equally contain { headPlate: 'KLP-7988', …(3) }
+
+- Expected:
+{
+  "headPlate": "KLP-7988",
+  "idNumber": "F131104093",
+  "ownerName": "李美玲",
+  "tailPlate": "20-9A",
+}
+
++ Received:
+[
+  {
+    "headPlate": "929-X2",
+    "idNumber": "A123456789",
+    "ownerName": "王小明",
+    "tailPlate": "20-9A",
+  },
+  {
+    "headPlate": "929-X2",
+    "idNumber": "F131104093",
+    "ownerName": "李美玲",
+    "tailPlate": "30-1B",
+  },
+]
+
+ ❯ tests/support/stepLib/common.ts:35:51
+     33|     const now = (await listRecords()).map(stripId)
+     34|     for (const row of rows) {
+     35|       expect(now, `名單應包含 ${JSON.stringify(row)}`).toContainEqual(row)
+       |                                                   ^
+     36|     }
+     37|   })
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/289]⎯
+
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 所有值以文字保留，前導 0 不消失 > Given 名單上有以下資料：
+AssertionError: 名單應包含 {"headPlate":"0012-007","tailPlate":"00-01","ownerName":"007","idNumber":"A123456789"}: expected [ { headPlate: '929-X2', …(3) }, …(1) ] to deep equally contain { headPlate: '0012-007', …(3) }
+
+- Expected:
+{
+  "headPlate": "0012-007",
+  "idNumber": "A123456789",
+  "ownerName": "007",
+  "tailPlate": "00-01",
+}
+
++ Received:
+[
+  {
+    "headPlate": "929-X2",
+    "idNumber": "A123456789",
+    "ownerName": "王小明",
+    "tailPlate": "20-9A",
+  },
+  {
+    "headPlate": "KLP-7988",
+    "idNumber": "F131104093",
+    "ownerName": "李美玲",
+    "tailPlate": "OL-02",
+  },
+]
+
+ ❯ tests/support/stepLib/common.ts:35:51
+     33|     const now = (await listRecords()).map(stripId)
+     34|     for (const row of rows) {
+     35|       expect(now, `名單應包含 ${JSON.stringify(row)}`).toContainEqual(row)
+       |                                                   ^
+     36|     }
+     37|   })
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/289]⎯
+
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔案內容全部都能匯入 > When 我預覽匯入這份檔案
+Error: not implemented: previewImport
+ ❯ notImplemented src/data/importer.ts:5:9
+      3| // 紅燈階段 stub：契約 §3.5 的新 API，尚未實作。
+      4| const notImplemented = (name: string): never => {
+      5|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      6| }
+      7|
+ ❯ previewImport src/data/importer.ts:13:10
+ ❯ tests/support/stepLib/importApi.ts:175:25
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/289]⎯
+
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 名單上標示駕駛身分證有警示的資料 > Given 名單上有一筆資料：車頭車號 "929-X2"、車斗車號 "20-9A"、駕駛姓名 "王小明"、駕駛身分證 "AB12345678"
+Error: 前置資料存檔失敗（{"headPlate":"929-X2","tailPlate":"20-9A","ownerName":"王小明","idNumber":"AB12345678"}）：{"ok":false,"reason":"IDENTICAL_ROW","existing":{"headPlate":"929-X2","tailPlate":"20-9A","ownerName":"王小明","idNumber":"AB12345678","id":7}}
+ ❯ World.seed tests/support/world.ts:95:26
+     93|     for (const r of rows) {
+     94|       const res = await createRecord(r)
+     95|       if (!res.ok) throw new Error(`前置資料存檔失敗（${JSON.stringify(r)}）：${J…
+       |                          ^
+     96|     }
+     97|   }
+ ❯ tests/support/stepLib/common.ts:23:5
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/289]⎯
+
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 建置產物預先快取 App 外殼與所有執行時資源 > Given 已完成正式建置
+Error: vite build 失敗：Command failed: /opt/homebrew/Cellar/node/26.4.0/bin/node /Users/leonardoroosevelt/Project/ochema/node_modules/vite/bin/vite.js build
+[31m✗[39m Build failed in 709ms
+[31merror during build:
+[31m[vite-plugin-pwa:build] There was an error during the build:
+  src/ui/ImportView.tsx (2:9): "commitImport" is not exported by "src/data/importer.ts", imported by "src/ui/ImportView.tsx".
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  src/ui/ImportView.tsx (2:9): "commitImport" is not exported by "src/data/importer.ts", imported by "src/ui/ImportView.tsx".[31m
+file: [36m/Users/leonardoroosevelt/Project/ochema/src/ui/ImportView.tsx:2:9[31m
+[33m
+1: import { useEffect, useId, useRef, useState } from 'react'
+2: import { commitImport, previewImport } from '../data/importer'
+            ^
+3: import {
+4:   COLUMN_TITLES,
+[31m
+    at getRollupError (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/parseAst.js:345:41)
+    at file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24976:39
+    at async catchUnfinishedHookActions (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24432:16)
+    at async rollupInternal (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24960:5)
+    at async buildEnvironment (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:33792:12)
+    at async Object.build (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:34151:19)
+    at async Object.buildApp (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:34148:153)
+    at async CAC.<anonymous> (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/cli.js:629:3)[39m
+
+[36mvite v7.3.7 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 56 modules transformed.
+
+[31m✗[39m Build failed in 709ms
+[31merror during build:
+[31m[vite-plugin-pwa:build] There was an error during the build:
+  src/ui/ImportView.tsx (2:9): "commitImport" is not exported by "src/data/importer.ts", imported by "src/ui/ImportView.tsx".
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  src/ui/ImportView.tsx (2:9): "commitImport" is not exported by "src/data/importer.ts", imported by "src/ui/ImportView.tsx".[31m
+file: [36m/Users/leonardoroosevelt/Project/ochema/src/ui/ImportView.tsx:2:9[31m
+[33m
+1: import { useEffect, useId, useRef, useState } from 'react'
+2: import { commitImport, previewImport } from '../data/importer'
+            ^
+3: import {
+4:   COLUMN_TITLES,
+[31m
+    at getRollupError (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/parseAst.js:345:41)
+    at file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24976:39
+    at async catchUnfinishedHookActions (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24432:16)
+    at async rollupInternal (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24960:5)
+    at async buildEnvironment (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:33792:12)
+    at async Object.build (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:34151:19)
+    at async Object.buildApp (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:34148:153)
+    at async CAC.<anonymous> (file:///Users/leonardoroosevelt/Project/ochema/node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/cli.js:629:3)[39m
+
+ ❯ getRollupError node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/parseAst.js:345:41
+ ❯ node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24976:39
+ ❯ catchUnfinishedHookActions node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24432:16
+ ❯ rollupInternal node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24960:5
+ ❯ buildEnvironment node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:33792:12
+ ❯ Object.build node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:34151:19
+ ❯ Object.buildApp node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:34148:153
+ ❯ getRollupError node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/parseAst.js:345:41
+ ❯ node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24976:39
+ ❯ catchUnfinishedHookActions node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24432:16
+ ❯ rollupInternal node_modules/.pnpm/rollup@4.68.0/node_modules/rollup/dist/es/shared/node-entry.js:24960:5
+ ❯ buildEnvironment node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:33792:12
+ ❯ Object.build node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:34151:19
+ ❯ Object.buildApp node_modules/.pnpm/vite@7.3.7_@types+node@26.6.6_terser@5.51.2/node_modules/vite/dist/node/chunks/config.js:34148:153
+ ❯ tests/support/build.ts:28:23
+     26|       { cwd: ROOT, env: productionEnv(), maxBuffer: 16 * 1024 * 1024 },
+     27|       (err, stdout, stderr) => {
+     28|         if (err) fail(new Error(`vite build 失敗：${err.message}\n${stdou…
+       |                       ^
+     29|         else ok()
+     30|       },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/289]⎯
+
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 1｜車頭車號］ > And 名單上有 0 筆資料
+AssertionError: 資料庫內的名單筆數: expected [ { headPlate: '929-X2', …(4) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ expectCount tests/support/stepLib/common.ts:9:32
+      7| export async function expectCount(w: World, n: number) {
+      8|   const records = await listRecords()
+      9|   expect(records, `資料庫內的名單筆數`).toHaveLength(n)
+       |                                ^
+     10|   if (w.ui.mounted) {
+     11|     await w.ui.goList()
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/289]⎯
+
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Scenario: 在查詢結果中編輯後，查詢條件保持 > When 我把車頭車號 "929-X2" 那筆的駕駛姓名改成 "王小美" 並儲存
+Error: 名單上以車頭車號「929-X2」找到 0 列（預期 1 列）
+ ❯ Ui.rowBy tests/support/ui.ts:193:34
+    191|   rowBy(field: keyof RecordFields, value: string): HTMLElement {
+    192|     const hits = this.rows().filter((r) => this.rowValues(r)[field] ==…
+    193|     if (hits.length !== 1) throw new Error(`名單上以${FIELD_LABELS[field]}…
+       |                                  ^
+    194|     return hits[0]!
+    195|   }
+ ❯ tests/support/stepLib/search.ts:30:29
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 預覽畫面 > 寫明「將刪除目前 N 筆、匯入 M 筆」，四類統計，整列相同合併告知；沒有任何處理重複的選項
+TestingLibraryElementError: Unable to find role="button" and name "確認匯入"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ choose tests/ui/importView.test.tsx:50:24
+     48|   render(<ImportView onCommitted={props.onCommitted ?? noop} onCancel=…
+     49|   fireEvent.change(screen.getByLabelText('選擇 Excel 檔'), { target: { fi…
+     50|   return (await screen.findByRole('button', { name: '確認匯入' })) as HTML…
+       |                        ^
+     51| }
+     52|
+ ❯ tests/ui/importView.test.tsx:62:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 預覽畫面 > 有格式錯誤：「確認匯入」aria-disabled、可聚焦、說明原因；點了不會跳二次確認；不顯示「將刪除」
+AssertionError: expected null to be 'true' // Object.is equality
+
+- Expected:
+"true"
+
++ Received:
+null
+
+ ❯ tests/ui/importView.test.tsx:78:51
+     76|   it('有格式錯誤：「確認匯入」aria-disabled、可聚焦、說明原因；點了不會跳二次確認；不顯示「將刪除」', async ()…
+     77|     const confirm = await choose(preview([row(2, 'NEW'), row(3, 'FORMA…
+     78|     expect(confirm.getAttribute('aria-disabled')).toBe('true')
+       |                                                   ^
+     79|     confirm.focus()
+     80|     expect(document.activeElement).toBe(confirm) // 不用原生 disabled，鍵盤才讀…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 二次確認框 > 按「確認匯入」跳出原生 dialog，預設焦點在「取消」，此時尚未替換
+TestingLibraryElementError: Unable to find role="button" and name "確認匯入"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ choose tests/ui/importView.test.tsx:50:24
+     48|   render(<ImportView onCommitted={props.onCommitted ?? noop} onCancel=…
+     49|   fireEvent.change(screen.getByLabelText('選擇 Excel 檔'), { target: { fi…
+     50|   return (await screen.findByRole('button', { name: '確認匯入' })) as HTML…
+       |                        ^
+     51| }
+     52|
+ ❯ tests/ui/importView.test.tsx:101:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 二次確認框 > 名單是空的（將刪除 0 筆）也要二次確認
+TestingLibraryElementError: Unable to find role="button" and name "確認匯入"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ choose tests/ui/importView.test.tsx:50:24
+     48|   render(<ImportView onCommitted={props.onCommitted ?? noop} onCancel=…
+     49|   fireEvent.change(screen.getByLabelText('選擇 Excel 檔'), { target: { fi…
+     50|   return (await screen.findByRole('button', { name: '確認匯入' })) as HTML…
+       |                        ^
+     51| }
+     52|
+ ❯ tests/ui/importView.test.tsx:112:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 二次確認框 > 取消：對話框關閉、不呼叫替換、預覽仍在、焦點回到「確認匯入」
+TestingLibraryElementError: Unable to find role="button" and name "確認匯入"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ choose tests/ui/importView.test.tsx:50:24
+     48|   render(<ImportView onCommitted={props.onCommitted ?? noop} onCancel=…
+     49|   fireEvent.change(screen.getByLabelText('選擇 Excel 檔'), { target: { fi…
+     50|   return (await screen.findByRole('button', { name: '確認匯入' })) as HTML…
+       |                        ^
+     51| }
+     52|
+ ❯ tests/ui/importView.test.tsx:120:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 二次確認框 > 先匯出目前資料：匯出全部、預設 .xlsx，交給下載；對話框仍開著、不呼叫替換
+TestingLibraryElementError: Unable to find role="button" and name "確認匯入"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ choose tests/ui/importView.test.tsx:50:24
+     48|   render(<ImportView onCommitted={props.onCommitted ?? noop} onCancel=…
+     49|   fireEvent.change(screen.getByLabelText('選擇 Excel 檔'), { target: { fi…
+     50|   return (await screen.findByRole('button', { name: '確認匯入' })) as HTML…
+       |                        ^
+     51| }
+     52|
+ ❯ tests/ui/importView.test.tsx:135:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 二次確認框 > 先匯出失敗：對話框內告知，仍不替換
+TestingLibraryElementError: Unable to find role="button" and name "確認匯入"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ choose tests/ui/importView.test.tsx:50:24
+     48|   render(<ImportView onCommitted={props.onCommitted ?? noop} onCancel=…
+     49|   fireEvent.change(screen.getByLabelText('選擇 Excel 檔'), { target: { fi…
+     50|   return (await screen.findByRole('button', { name: '確認匯入' })) as HTML…
+       |                        ^
+     51| }
+     52|
+ ❯ tests/ui/importView.test.tsx:149:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 二次確認框 > 確認替換：把預覽交給資料層，顯示「已刪除 N 筆、已匯入 M 筆」與合併筆數，並通知外層重新載入
+TestingLibraryElementError: Unable to find role="button" and name "確認匯入"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ choose tests/ui/importView.test.tsx:50:24
+     48|   render(<ImportView onCommitted={props.onCommitted ?? noop} onCancel=…
+     49|   fireEvent.change(screen.getByLabelText('選擇 Excel 檔'), { target: { fi…
+     50|   return (await screen.findByRole('button', { name: '確認匯入' })) as HTML…
+       |                        ^
+     51| }
+     52|
+ ❯ tests/ui/importView.test.tsx:161:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/289]⎯
+
+ FAIL  tests/ui/importView.test.tsx > 二次確認框 > 寫入失敗：對話框關閉，預覽仍在並告知「名單沒有任何變更」
+TestingLibraryElementError: Unable to find role="button" and name "確認匯入"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ choose tests/ui/importView.test.tsx:50:24
+     48|   render(<ImportView onCommitted={props.onCommitted ?? noop} onCancel=…
+     49|   fireEvent.change(screen.getByLabelText('選擇 Excel 檔'), { target: { fi…
+     50|   return (await screen.findByRole('button', { name: '確認匯入' })) as HTML…
+       |                        ^
+     51| }
+     52|
+ ❯ tests/ui/importView.test.tsx:175:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/289]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 8 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: row.existingConflicts is not iterable
+ ❯ describe src/ui/ImportView.tsx:83:23
+     81|   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
+     82|   const targets: string[] = []
+     83|   for (const c of row.existingConflicts) targets.push(`既有資料：${c.record…
+       |                       ^
+     84|   for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.…
+     85|   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
+ ❯ src/ui/ImportView.tsx:129:22
+ ❯ CategoryTable src/ui/ImportView.tsx:118:22
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+
+This error originated in "tests/ui/importView.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "寫明「將刪除目前 N 筆、匯入 M 筆」，四類統計，整列相同合併告知；沒有任何處理重複的選項". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: row.existingConflicts is not iterable
+ ❯ describe src/ui/ImportView.tsx:83:23
+     81|   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
+     82|   const targets: string[] = []
+     83|   for (const c of row.existingConflicts) targets.push(`既有資料：${c.record…
+       |                       ^
+     84|   for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.…
+     85|   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
+ ❯ src/ui/ImportView.tsx:129:22
+ ❯ CategoryTable src/ui/ImportView.tsx:118:22
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+
+This error originated in "tests/ui/importView.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "按「確認匯入」跳出原生 dialog，預設焦點在「取消」，此時尚未替換". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: row.existingConflicts is not iterable
+ ❯ describe src/ui/ImportView.tsx:83:23
+     81|   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
+     82|   const targets: string[] = []
+     83|   for (const c of row.existingConflicts) targets.push(`既有資料：${c.record…
+       |                       ^
+     84|   for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.…
+     85|   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
+ ❯ src/ui/ImportView.tsx:129:22
+ ❯ CategoryTable src/ui/ImportView.tsx:118:22
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+
+This error originated in "tests/ui/importView.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "名單是空的（將刪除 0 筆）也要二次確認". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: row.existingConflicts is not iterable
+ ❯ describe src/ui/ImportView.tsx:83:23
+     81|   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
+     82|   const targets: string[] = []
+     83|   for (const c of row.existingConflicts) targets.push(`既有資料：${c.record…
+       |                       ^
+     84|   for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.…
+     85|   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
+ ❯ src/ui/ImportView.tsx:129:22
+ ❯ CategoryTable src/ui/ImportView.tsx:118:22
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+
+This error originated in "tests/ui/importView.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "取消：對話框關閉、不呼叫替換、預覽仍在、焦點回到「確認匯入」". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: row.existingConflicts is not iterable
+ ❯ describe src/ui/ImportView.tsx:83:23
+     81|   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
+     82|   const targets: string[] = []
+     83|   for (const c of row.existingConflicts) targets.push(`既有資料：${c.record…
+       |                       ^
+     84|   for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.…
+     85|   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
+ ❯ src/ui/ImportView.tsx:129:22
+ ❯ CategoryTable src/ui/ImportView.tsx:118:22
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+
+This error originated in "tests/ui/importView.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "先匯出目前資料：匯出全部、預設 .xlsx，交給下載；對話框仍開著、不呼叫替換". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: row.existingConflicts is not iterable
+ ❯ describe src/ui/ImportView.tsx:83:23
+     81|   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
+     82|   const targets: string[] = []
+     83|   for (const c of row.existingConflicts) targets.push(`既有資料：${c.record…
+       |                       ^
+     84|   for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.…
+     85|   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
+ ❯ src/ui/ImportView.tsx:129:22
+ ❯ CategoryTable src/ui/ImportView.tsx:118:22
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+
+This error originated in "tests/ui/importView.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "先匯出失敗：對話框內告知，仍不替換". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: row.existingConflicts is not iterable
+ ❯ describe src/ui/ImportView.tsx:83:23
+     81|   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
+     82|   const targets: string[] = []
+     83|   for (const c of row.existingConflicts) targets.push(`既有資料：${c.record…
+       |                       ^
+     84|   for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.…
+     85|   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
+ ❯ src/ui/ImportView.tsx:129:22
+ ❯ CategoryTable src/ui/ImportView.tsx:118:22
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+
+This error originated in "tests/ui/importView.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "確認替換：把預覽交給資料層，顯示「已刪除 N 筆、已匯入 M 筆」與合併筆數，並通知外層重新載入". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: row.existingConflicts is not iterable
+ ❯ describe src/ui/ImportView.tsx:83:23
+     81|   const kinds = row.kinds.map((k) => KIND_LABEL[k]).join('、')
+     82|   const targets: string[] = []
+     83|   for (const c of row.existingConflicts) targets.push(`既有資料：${c.record…
+       |                       ^
+     84|   for (const c of row.inFileConflicts) targets.push(`檔案第 ${c.fileRows.…
+     85|   return targets.length ? `${kinds}（${targets.join('；')}）` : kinds
+ ❯ src/ui/ImportView.tsx:129:22
+ ❯ CategoryTable src/ui/ImportView.tsx:118:22
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.3.1_react@19.3.1/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22
+
+This error originated in "tests/ui/importView.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "寫入失敗：對話框關閉，預覽仍在並告知「名單沒有任何變更」". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  12 failed | 9 passed (21)
+      Tests  49 failed | 371 passed | 979 skipped | 10 todo (1409)
+     Errors  8 errors
+   Start at  18:23:25
+   Duration  27.51s (tests 66%, environment 27%, import 4%, transform 1%, setup 1%)
+
+Environment  jsdom was created 21 times · 22.97s total, 27% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+
+vitest exit: 1
