@@ -1,0 +1,3 @@
+$ scripts/bdd-dryrun.sh
+exit=0
+

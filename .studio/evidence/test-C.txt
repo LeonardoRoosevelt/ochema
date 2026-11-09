@@ -1,0 +1,15 @@
+$ npx vitest run
+exit=0
+
+
+ RUN  v5.1.0 /Users/leonardoroosevelt/Project/ochema
+
+
+ Test Files  21 passed (21)
+      Tests  1371 passed | 10 todo (1381)
+   Start at  13:54:48
+   Duration  53.15s (tests 78%, environment 17%, import 3%, transform 1%, setup 1%)
+
+    Isolate  21 workers spawned · ~1.56s startup each (spawn + environment, per file)
+             at least ~6.63s faster with isolate: false — reuses workers across files instead of one per file
+

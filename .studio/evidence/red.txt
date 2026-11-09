@@ -1,0 +1,907 @@
+# ochema 紅燈證據（階段 3a）
+# 指令：npx vitest run --no-color　　時間：2026-11-09 12:39:27
+# 狀態：data 層與 UI 皆為 stub／最小殼，預期紅燈；失敗原因必須是 not implemented 或斷言不成立。
+
+
+ RUN  v5.1.0 /Users/leonardoroosevelt/Project/ochema
+
+ ❯ tests/steps/search.steps.ts (37 tests | 11 failed | 26 skipped) 41ms
+   ❯ Feature: 查詢名單 (37)
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 16ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 0ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 0ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 0ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 0ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 0ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 0ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 1ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 0ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 0ms
+     ❯ Background: (1)
+       × Given 名單上有以下資料： 1ms
+ ❯ tests/steps/field-validation.steps.ts (83 tests | 36 failed | 47 skipped) 169ms
+   ❯ Feature: 欄位格式檢查 (83)
+     ❯ Scenario: 合格的車牌格式 ［範例 1｜929-X2］ (2)
+       × When 我檢查車牌 "929-X2" 9ms
+     ❯ Scenario: 合格的車牌格式 ［範例 2｜KLP-7988］ (2)
+       × When 我檢查車牌 "KLP-7988" 2ms
+     ❯ Scenario: 合格的車牌格式 ［範例 3｜20-9A］ (2)
+       × When 我檢查車牌 "20-9A" 1ms
+     ❯ Scenario: 合格的車牌格式 ［範例 4｜OL-02］ (2)
+       × When 我檢查車牌 "OL-02" 1ms
+     ❯ Scenario: 合格的車牌格式 ［範例 5｜A-1］ (2)
+       × When 我檢查車牌 "A-1" 1ms
+     ❯ Scenario: 合格的車牌格式 ［範例 6｜0012-007］ (2)
+       × When 我檢查車牌 "0012-007" 1ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 1｜klp-7988｜PLATE_LOWERCASE］ (2)
+       × When 我檢查車牌 "klp-7988" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 2｜Klp-7988｜PLATE_LOWERCASE］ (2)
+       × When 我檢查車牌 "Klp-7988" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 3｜ＫＬＰ-7988｜PLATE_FULLWIDTH］ (2)
+       × When 我檢查車牌 "ＫＬＰ-7988" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 4｜929－X2｜PLATE_FULLWIDTH］ (2)
+       × When 我檢查車牌 "929－X2" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 5｜９２９-X2｜PLATE_FULLWIDTH］ (2)
+       × When 我檢查車牌 "９２９-X2" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 6｜929X2｜PLATE_NO_HYPHEN］ (2)
+       × When 我檢查車牌 "929X2" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 7｜929-X2-1｜PLATE_MULTI_HYPHEN］ (2)
+       × When 我檢查車牌 "929-X2-1" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 8｜-X2｜PLATE_EMPTY_PART］ (2)
+       × When 我檢查車牌 "-X2" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 9｜929-｜PLATE_EMPTY_PART］ (2)
+       × When 我檢查車牌 "929-" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 10｜929 -X2｜PLATE_INNER_WHITESPACE］ (2)
+       × When 我檢查車牌 "929 -X2" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 11｜9 29-X2｜PLATE_INNER_WHITESPACE］ (2)
+       × When 我檢查車牌 "9 29-X2" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 12｜929_X2｜PLATE_INVALID_CHAR］ (2)
+       × When 我檢查車牌 "929_X2" 1ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 13｜929.X2｜PLATE_INVALID_CHAR］ (2)
+       × When 我檢查車牌 "929.X2" 0ms
+     ❯ Scenario: 不合格的車牌格式一律擋下 ［範例 14｜REQUIRED］ (2)
+       × When 我檢查車牌 "" 1ms
+     ❯ Scenario: 車牌前後空白先去除再檢查 (2)
+       × When 我檢查車牌 " 929-X2 " 10ms
+     ❯ Scenario: 身分證前後空白先去除再檢查 (2)
+       × When 我檢查身分證 " A123456789 " 2ms
+     ❯ Scenario: 身分證檢查碼正確則不警示 ［範例 1｜A123456789｜一般身分證］ (2)
+       × When 我檢查身分證 "A123456789" 0ms
+     ❯ Scenario: 身分證檢查碼正確則不警示 ［範例 2｜F131104093｜一般身分證］ (2)
+       × When 我檢查身分證 "F131104093" 5ms
+     ❯ Scenario: 身分證檢查碼正確則不警示 ［範例 3｜A800000014｜新式居留證，第二碼 8］ (2)
+       × When 我檢查身分證 "A800000014" 0ms
+     ❯ Scenario: 身分證檢查碼正確則不警示 ［範例 4｜B900000017｜新式居留證，第二碼 9］ (2)
+       × When 我檢查身分證 "B900000017" 0ms
+     ❯ Scenario: 身分證不合格只警示，不阻擋 ［範例 1｜A123456788｜ID_CHECKSUM］ (3)
+       × When 我檢查身分證 "A123456788" 0ms
+     ❯ Scenario: 身分證不合格只警示，不阻擋 ［範例 2｜A12345678｜ID_LENGTH］ (3)
+       × When 我檢查身分證 "A12345678" 0ms
+     ❯ Scenario: 身分證不合格只警示，不阻擋 ［範例 3｜A1234567890｜ID_LENGTH］ (3)
+       × When 我檢查身分證 "A1234567890" 0ms
+     ❯ Scenario: 身分證不合格只警示，不阻擋 ［範例 4｜a123456789｜ID_LOWERCASE］ (3)
+       × When 我檢查身分證 "a123456789" 0ms
+     ❯ Scenario: 身分證不合格只警示，不阻擋 ［範例 5｜1123456789｜ID_FIRST_NOT_ALPHA］ (3)
+       × When 我檢查身分證 "1123456789" 0ms
+     ❯ Scenario: 身分證不合格只警示，不阻擋 ［範例 6｜A12345678X｜ID_NON_DIGIT］ (3)
+       × When 我檢查身分證 "A12345678X" 1ms
+     ❯ Scenario: 身分證不合格只警示，不阻擋 ［範例 7｜AB12345678｜ID_LEGACY_RESIDENCE］ (3)
+       × When 我檢查身分證 "AB12345678" 0ms
+     ❯ Scenario: 名單上標示身分證有警示的資料 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "AB12345678" 1ms
+     ❯ Scenario: 修正身分證後警示消失 (3)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456788" 1ms
+     ❯ Scenario: 身分證中間含空白只警示，不阻擋 (3)
+       × When 我檢查身分證 "A123 56789" 1ms
+ ❯ tests/steps/record-management.steps.ts (73 tests | 18 failed | 55 skipped) 113ms
+   ❯ Feature: 名單管理 (73)
+     ❯ Scenario: 新增一筆合格的資料 (4)
+       × Given 名單是空的 10ms
+     ❯ Scenario: 必填欄位留空時不能存檔 ［範例 1｜車頭］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 必填欄位留空時不能存檔 ［範例 2｜車尾］ (5)
+       × Given 名單是空的 1ms
+     ❯ Scenario: 必填欄位留空時不能存檔 ［範例 3｜姓名］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 必填欄位留空時不能存檔 ［範例 4｜身分證］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 只含空白的欄位視為留空 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 小寫車牌擋下並說明原因，不自動轉成大寫 (5)
+       × Given 名單是空的 14ms
+     ❯ Scenario: 車牌中間含空白仍算格式錯誤並擋下 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 前後空白自動去除後存檔 (4)
+       × Given 名單是空的 7ms
+     ❯ Scenario: 編輯時前後空白同樣自動去除 (3)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 身分證不合格只警示，仍可存檔 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 編輯既有資料並儲存 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 編輯時把車牌改成不合格格式會被擋下，原資料不變 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 編輯後放棄修改 (3)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 刪除資料前須確認 (3)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 刪除時取消確認，資料保留 (3)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 重新開啟 App 後資料仍在 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 名單為空時顯示空狀態 (3)
+       × Given 名單是空的 0ms
+ ❯ tests/steps/duplicate-detection.steps.ts (120 tests | 29 failed | 91 skipped) 124ms
+   ❯ Feature: 重複資料偵測 (120)
+     ❯ Scenario: 同一車頭出現在多筆資料 (3)
+       × Given 名單上有以下資料： 49ms
+     ❯ Scenario: 同一車尾出現在多筆資料 (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 同一身分證對應到不同姓名 (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 同一人擁有多台車不算重複 (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 沒有重複的名單 (3)
+       × Given 名單上有以下資料： 6ms
+     ❯ Scenario: 只有一筆資料時不會與自己重複 (3)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 一筆資料同時符合多種重複 (4)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 三筆共用同一車頭視為同一組 (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 比對為原樣比對，不同的字串不算重複 (3)
+       × Given 名單上有以下資料： 1ms
+     ❯ Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 1｜929-X2｜30-1B｜李美玲］ (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 2｜929-X3｜20-9A｜李美玲］ (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 3｜929-X3｜30-1B｜王小名］ (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 1｜929-X2｜OL-02｜李美玲］ (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 2｜KLP-7988｜20-9A｜李美玲］ (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 3｜KLP-7988｜OL-02｜李美玲］ (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 新增與既有資料四欄完全相同的整列時擋下，資料不變 ［範例 1｜929-X2｜20-9A｜王小明］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 新增前後空白去除後與既有資料四欄完全相同的整列時擋下，資料不變 (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 編輯成與另一筆四欄完全相同的整列時擋下，被編輯的資料不變 (6)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 新增不造成重複時不顯示重複通知 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 編輯已在重複組內的資料但沒動衝突欄位，不與自己比對也不誤報新的重複 (6)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 名單上持續標示有重複的資料 (4)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 重複標示在重新開啟 App 後仍在 (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 刪除其中一筆後，另一筆的重複標示消失 (3)
+       × Given 名單上有以下資料： 1ms
+     ❯ Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 1｜929-X2｜30-1B｜李美玲］ (4)
+       × Given 名單上有以下資料： 1ms
+     ❯ Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 2｜KLP-7988｜20-9A｜李美玲］ (4)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 3｜KLP-7988｜OL-02｜王小名］ (4)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 三筆同組其中一筆改掉後，剩下兩筆仍標示重複 (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 總覽集中顯示所有重複與警示 (4)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 沒有任何重複或警示時總覽顯示無問題 (3)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+ ❯ tests/steps/excel-export.steps.ts (176 tests | 40 failed | 136 skipped) 73ms
+   ❯ Feature: Excel 匯出 (176)
+     ❯ Scenario: 匯出檔的標題與欄位順序 (4)
+       × Given 名單上有以下資料： 11ms
+     ❯ Scenario: 所有值以文字保留，前導 0 不消失 (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 重複與警示的資料也如實匯出 (4)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 匯出後再匯入能完整還原 (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 含重複的名單匯出再匯入，選擇照樣匯入仍能完整還原 (6)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 名單為空時匯出只有標題列的範本檔 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 (4)
+       × Given 名單是空的 1ms
+     ❯ Scenario: 含特殊字元的姓名原樣匯出 (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 在畫面上匯出並取得檔案 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 名單為空時在畫面上匯出，取得只有標題列的範本檔 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 查詢結果篩選中時，匯出仍是全部資料 (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 1｜.xlsx］ (4)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 2｜.xls］ (4)
+       × Given 名單上有以下資料： 1ms
+     ❯ Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 3｜CSV］ (4)
+       × Given 名單上有以下資料： 1ms
+     ❯ Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 1｜.xlsx］ (5)
+       × Given 名單上有以下資料： 1ms
+     ❯ Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 2｜.xls］ (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 3｜CSV］ (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: CSV 匯出為帶 BOM 的 UTF-8 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 2ms
+     ❯ Scenario: CSV 匯出時，含逗號與引號的值以引號包住並原樣還原 (5)
+       × Given 名單上有以下資料： 1ms
+     ❯ Scenario: 各格式匯出後再匯入能完整還原 ［範例 1｜.xlsx］ (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出後再匯入能完整還原 ［範例 2｜.xls］ (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出後再匯入能完整還原 ［範例 3｜CSV］ (5)
+       × Given 名單上有以下資料： 1ms
+     ❯ Scenario: 各格式匯出含重複的名單再匯入，選擇照樣匯入仍能完整還原 ［範例 1｜.xlsx］ (6)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出含重複的名單再匯入，選擇照樣匯入仍能完整還原 ［範例 2｜.xls］ (6)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出含重複的名單再匯入，選擇照樣匯入仍能完整還原 ［範例 3｜CSV］ (6)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 1｜.xlsx］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 2｜.xls］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 3｜CSV］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 1｜.xlsx］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 2｜.xls］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 3｜CSV］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各格式匯出含特殊字元的姓名都原樣保留 ［範例 1｜.xlsx］ (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出含特殊字元的姓名都原樣保留 ［範例 2｜.xls］ (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 各格式匯出含特殊字元的姓名都原樣保留 ［範例 3｜CSV］ (3)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 沒有另外選擇格式直接匯出，預設取得 .xlsx 檔案 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 1｜.xlsx］ (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 2｜.xls］ (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 3｜CSV］ (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 查詢結果篩選中時，各格式匯出仍是全部資料 ［範例 1｜.xls］ (5)
+       × Given 名單上有以下資料： 0ms
+     ❯ Scenario: 查詢結果篩選中時，各格式匯出仍是全部資料 ［範例 2｜CSV］ (5)
+       × Given 名單上有以下資料： 2ms
+ ❯ tests/steps/excel-import.steps.ts (567 tests | 104 failed | 463 skipped) 96ms
+   ❯ Feature: Excel 匯入 (567)
+     ❯ Scenario: 預覽：檔案內容全部都能新增 (5)
+       × Given 名單是空的 4ms
+     ❯ Scenario: 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 ［範例 1｜929-X2｜30-1B｜李美玲］ (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 ［範例 2｜929-X3｜20-9A｜李美玲］ (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 ［範例 3｜929-X3｜30-1B｜王小名］ (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 ［範例 4｜929-X2｜20-9A｜王小明］ (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 ［範例 1｜929-X2｜20-9A｜王小明］ (6)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 ［範例 2｜929-X2｜20-9A｜王小明］ (6)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 ［範例 3｜929-X2｜20-9A｜王小明］ (6)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 ［範例 4｜929-X2｜20-9A｜王小明］ (6)
+       × Given 名單是空的 2ms
+     ❯ Scenario: 預覽：同時與既有資料及檔內其他列重複的列，歸為「與既有重複」 (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 預覽：後出現的列同時符合既有重複與檔內重複時歸既有，先出現的列仍算可新增 (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 預覽：每一列只屬於一類，各類筆數相加等於資料列數 (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 3ms
+     ❯ Scenario: 預覽：同一人多台車的列不算重複 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 1｜klp-7988｜OL-02｜李美玲］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 2｜KLP-7988｜ol-02｜李美玲］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 3｜KLP-7988｜OL02｜李美玲］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 4｜KLP-7988｜A-B-C｜李美玲］ (5)
+       × Given 名單是空的 1ms
+     ❯ Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 5｜KLP- 7988｜OL-02｜李美玲］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 6｜KLP-7988｜OL-02｜F131104093］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 7｜KLP-7988｜OL-02｜李美玲］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 8｜OL-02｜李美玲｜F131104093］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：單獨列出整列相同的列，並告知兩種選項都不會匯入 (7)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 整列相同的列在兩種選項下都不匯入，其餘依選項處理 ［範例 1｜略過重複｜1｜3］ (7)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 整列相同的列在兩種選項下都不匯入，其餘依選項處理 ［範例 2｜照樣匯入｜2｜2］ (7)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 預覽：只與「與既有重複的列」重複的後面列，歸為檔內重複，略過重複時兩列都不匯入 (9)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 小寫車牌不會被自動轉成大寫，照樣匯入也不匯入 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 前後空白自動去除後再檢查與比對 (7)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 只含空白的儲存格視為留空 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 數字型儲存格讀取顯示的文字 ［範例 1｜7｜007］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 數字型儲存格讀取顯示的文字 ［範例 2｜7｜7］ (5)
+       × Given 名單是空的 1ms
+     ❯ Scenario: 數字型儲存格的值不符車牌格式時為錯誤列 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：身分證不合格的列只警示，仍算可新增 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽：一列同時有格式錯誤與重複時，以格式錯誤為準 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 缺少必要的欄位標題時整份檔案不接受 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 欄位順序與匯出不同，仍依標題對應 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 只有標題列、沒有資料列的檔案 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 完全空白的檔案 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 不是 Excel 的檔案 ［範例 1｜內容是隨機二進位資料的檔案］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 不是 Excel 的檔案 ［範例 2｜副檔名是 .xlsx 但內容已損毀的檔案］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 選擇略過重複：與既有資料重複的列不匯入 (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 略過重複：檔內重複組只保留第一次出現的那一列 (7)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 混合檔案：略過重複與照樣匯入的匯入筆數與保留的列 ［範例 1｜略過重複｜2｜2］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 混合檔案：略過重複與照樣匯入的匯入筆數與保留的列 ［範例 2｜照樣匯入｜4｜0］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 選擇照樣匯入：與既有資料的同車頭、同車尾、同身分證不同姓名照樣匯入 ［範例 1｜929-X2｜30-1B｜李美玲］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 2ms
+     ❯ Scenario: 選擇照樣匯入：與既有資料的同車頭、同車尾、同身分證不同姓名照樣匯入 ［範例 2｜929-X3｜20-9A｜李美玲］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 選擇照樣匯入：與既有資料的同車頭、同車尾、同身分證不同姓名照樣匯入 ［範例 3｜929-X3｜30-1B｜王小名］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 選擇照樣匯入：檔內的同車頭、同車尾、同身分證不同姓名兩列都匯入 ［範例 1｜929-X2｜20-9A｜王小明］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 選擇照樣匯入：檔內的同車頭、同車尾、同身分證不同姓名兩列都匯入 ［範例 2｜929-X2｜20-9A｜王小明］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 選擇照樣匯入：檔內的同車頭、同車尾、同身分證不同姓名兩列都匯入 ［範例 3｜929-X2｜20-9A｜王小明］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 照樣匯入：與既有資料四欄完全相同的整列不匯入 (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 照樣匯入：檔內四欄完全相同的整列只保留第一列 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 照樣匯入：格式錯誤的列仍然不匯入 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 身分證不合格的列在略過重複時照常匯入 (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 預覽後放棄，名單不變 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 照樣匯入後，重複的資料在名單上持續標示 (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 在畫面上預覽並匯入 (7)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 舊式 .xls 檔可預覽並匯入 (8)
+       × Given 名單是空的 1ms
+     ❯ Scenario: .xls 的數字型儲存格同樣讀取顯示的文字 ［範例 1｜7｜007］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: .xls 的數字型儲存格同樣讀取顯示的文字 ［範例 2｜7｜7］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: UTF-8 CSV 可預覽並匯入，不論有無 BOM；前導 0 保留為字串 ［範例 1｜CSV（有 BOM）］ (8)
+       × Given 名單是空的 0ms
+     ❯ Scenario: UTF-8 CSV 可預覽並匯入，不論有無 BOM；前導 0 保留為字串 ［範例 2｜CSV（無 BOM）］ (8)
+       × Given 名單是空的 0ms
+     ❯ Scenario: CSV 的欄位內含逗號、被引號包住的欄位依規則解析 ［範例 1｜CSV（有 BOM）］ (6)
+       × Given 名單是空的 0ms
+     ❯ Scenario: CSV 的欄位內含逗號、被引號包住的欄位依規則解析 ［範例 2｜CSV（無 BOM）］ (6)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 非 UTF-8 的 CSV 不接受，提示以 CSV UTF-8 另存 ［範例 1｜內容為一列資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A12］ (7)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 非 UTF-8 的 CSV 不接受，提示以 CSV UTF-8 另存 ［範例 2｜資料列的姓名含有中文字，其位元組不是合法的 UTF-8］ (7)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取 ［範例 1｜副檔名是 .csv 但內容是隨機二進位資料的檔案］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取 ［範例 2｜副檔名是 .xls、開頭為 D0 CF 11 E0 但內容被截斷的檔案］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取 ［範例 3｜副檔名是 .csv 但內容含有 NUL 位元組的檔案］ (5)
+       × Given 名單是空的 1ms
+     ❯ Scenario: 檔案格式依內容判定，不看副檔名 ［範例 1｜.xlsx｜UTF-8 CSV］ (4)
+       × Given 名單是空的 1ms
+     ❯ Scenario: 檔案格式依內容判定，不看副檔名 ［範例 2｜.csv｜.xlsx］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 檔案格式依內容判定，不看副檔名 ［範例 3｜.csv｜.xls］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 檔案格式依內容判定，不看副檔名 ［範例 4｜.xls｜.xlsx］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式的預覽分類規則一致 ［範例 1｜.xls］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的預覽分類規則一致 ［範例 2｜CSV（有 BOM）］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的預覽分類規則一致 ［範例 3｜CSV（無 BOM）］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的匯入選項規則一致 ［範例 1｜.xls｜略過重複｜1］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的匯入選項規則一致 ［範例 2｜.xls｜照樣匯入｜2］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的匯入選項規則一致 ［範例 3｜CSV（有 BOM）｜略過重複｜1］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的匯入選項規則一致 ［範例 4｜CSV（有 BOM）｜照樣匯入｜2］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的匯入選項規則一致 ［範例 5｜CSV（無 BOM）｜略過重複｜1］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的匯入選項規則一致 ［範例 6｜CSV（無 BOM）｜照樣匯入｜2］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 3ms
+     ❯ Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 1｜.xls］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 2｜CSV（有 BOM）］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 3｜CSV（無 BOM）］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受 ［範例 1｜.xls］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受 ［範例 2｜CSV（有 BOM）］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受 ［範例 3｜CSV（無 BOM）］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料 ［範例 1｜.xls］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料 ［範例 2｜CSV（有 BOM）］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料 ［範例 3｜CSV（無 BOM）］ (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的 ［範例 1｜有效但沒有任何儲存格內容的 .xls 檔］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的 ［範例 2｜0 位元組的 .xls 檔］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的 ［範例 3｜0 位元組的 CSV 檔］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的 ［範例 4｜只有 BOM、沒有任何其他內容的 CSV 檔］ (4)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 1｜.xls］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 2｜CSV（有 BOM）］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 3｜CSV（無 BOM）］ (6)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 合法 UTF-8 的純文字檔（非表格）依 CSV 讀取，因缺標題被拒絕 (5)
+       × Given 名單是空的 1ms
+     ❯ Scenario: CSV 某列欄位少於標題列時，缺的欄位視為空白，必填缺漏成為格式錯誤 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: CSV 某列欄位多於標題列時，多出的欄位忽略，該列照常處理 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽並匯入 ［範例 1｜.xls］ (7)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽並匯入 ［範例 2｜CSV（有 BOM）］ (7)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽並匯入 ［範例 3｜CSV（無 BOM）］ (7)
+       × Given 名單是空的 3ms
+     ❯ Scenario: 在畫面上選擇 Big5 編碼的 CSV 檔，畫面提示以 CSV UTF-8 另存 (6)
+       × Given 名單是空的 0ms
+ ❯ tests/steps/offline-use.steps.ts (41 tests | 7 failed | 19 skipped) 5847ms
+   ❯ Feature: 離線使用與本機資料 (41)
+     ❯ Scenario: 新版本更新期間不中斷目前操作，也不遺失資料 (4)
+       × And 更新機制不會清除或重建本機資料庫 3ms
+     ❯ Scenario: 無網路時仍可查詢 (4)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 1ms
+     ❯ Scenario: 無網路時仍可新增 (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 無網路時仍可匯出 (5)
+       × Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789" 0ms
+     ❯ Scenario: 無網路時仍可預覽並匯入 Excel (5)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 所有操作都不對外發出網路請求 (3)
+       × Given 名單是空的 0ms
+     ❯ Scenario: 畫面說明資料只存在這台裝置並提醒備份 (3)
+       × When 我開啟 App 2023ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 245 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一車頭出現在多筆資料 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一車尾出現在多筆資料 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一身分證對應到不同姓名 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 同一人擁有多台車不算重複 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 沒有重複的名單 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 一筆資料同時符合多種重複 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 三筆共用同一車頭視為同一組 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 比對為原樣比對，不同的字串不算重複 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 1｜929-X2｜OL-02｜李美玲］ > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 2｜KLP-7988｜20-9A｜李美玲］ > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 3｜KLP-7988｜OL-02｜李美玲］ > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯成與另一筆四欄完全相同的整列時擋下，被編輯的資料不變 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯已在重複組內的資料但沒動衝突欄位，不與自己比對也不誤報新的重複 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 名單上持續標示有重複的資料 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 重複標示在重新開啟 App 後仍在 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 刪除其中一筆後，另一筆的重複標示消失 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 1｜929-X2｜30-1B｜李美玲］ > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 2｜KLP-7988｜20-9A｜李美玲］ > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 編輯後解除重複，兩筆的標示與總覽項目都消失 ［範例 3｜KLP-7988｜OL-02｜王小名］ > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 三筆同組其中一筆改掉後，剩下兩筆仍標示重複 > Given 名單上有以下資料：
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 總覽集中顯示所有重複與警示 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 匯出檔的標題與欄位順序 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 所有值以文字保留，前導 0 不消失 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 重複與警示的資料也如實匯出 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 匯出後再匯入能完整還原 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 含重複的名單匯出再匯入，選擇照樣匯入仍能完整還原 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 含特殊字元的姓名原樣匯出 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 查詢結果篩選中時，匯出仍是全部資料 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 1｜.xlsx］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 2｜.xls］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出檔的標題與欄位順序一致 ［範例 3｜CSV］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 1｜.xlsx］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 2｜.xls］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出的值都以文字保留，前導 0 不消失 ［範例 3｜CSV］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: CSV 匯出時，含逗號與引號的值以引號包住並原樣還原 > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出後再匯入能完整還原 ［範例 1｜.xlsx］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出後再匯入能完整還原 ［範例 2｜.xls］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出後再匯入能完整還原 ［範例 3｜CSV］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含重複的名單再匯入，選擇照樣匯入仍能完整還原 ［範例 1｜.xlsx］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含重複的名單再匯入，選擇照樣匯入仍能完整還原 ［範例 2｜.xls］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含重複的名單再匯入，選擇照樣匯入仍能完整還原 ［範例 3｜CSV］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含特殊字元的姓名都原樣保留 ［範例 1｜.xlsx］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含特殊字元的姓名都原樣保留 ［範例 2｜.xls］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式匯出含特殊字元的姓名都原樣保留 ［範例 3｜CSV］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 查詢結果篩選中時，各格式匯出仍是全部資料 ［範例 1｜.xls］ > Given 名單上有以下資料：
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 查詢結果篩選中時，各格式匯出仍是全部資料 ［範例 2｜CSV］ > Given 名單上有以下資料：
+Error: not implemented: resetDbForTest
+ ❯ notImplemented src/data/notImplemented.ts:7:9
+      5|  */
+      6| export function notImplemented(name: string): never {
+      7|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      8| }
+      9|
+ ❯ resetDbForTest src/data/db.ts:17:10
+ ❯ World.freshDb tests/support/world.ts:85:11
+ ❯ tests/support/stepLib/common.ts:29:15
+ ❯ Object.fn tests/support/runFeature.ts:25:13
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/245]⎯
+
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 只有一筆資料時不會與自己重複 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 1｜929-X2｜30-1B｜李美玲］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 2｜929-X3｜20-9A｜李美玲］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增時造成重複，存檔當下告知重複種類與衝突的資料 ［範例 3｜929-X3｜30-1B｜王小名］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增與既有資料四欄完全相同的整列時擋下，資料不變 ［範例 1｜929-X2｜20-9A｜王小明］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增前後空白去除後與既有資料四欄完全相同的整列時擋下，資料不變 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 新增不造成重複時不顯示重複通知 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/duplicate-detection.steps.ts > Feature: 重複資料偵測 > Scenario: 沒有任何重複或警示時總覽顯示無問題 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 在畫面上匯出並取得檔案 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: CSV 匯出為帶 BOM 的 UTF-8 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 沒有另外選擇格式直接匯出，預設取得 .xlsx 檔案 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 1｜.xlsx］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 2｜.xls］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 在畫面上選擇格式匯出並取得對應的檔案 ［範例 3｜CSV］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 ［範例 1｜929-X2｜30-1B｜李美玲］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 ［範例 2｜929-X3｜20-9A｜李美玲］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 ［範例 3｜929-X3｜30-1B｜王小名］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：與既有資料重複的列，四種重複各自歸為「與既有重複」 ［範例 4｜929-X2｜20-9A｜王小明］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：同時與既有資料及檔內其他列重複的列，歸為「與既有重複」 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：後出現的列同時符合既有重複與檔內重複時歸既有，先出現的列仍算可新增 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：每一列只屬於一類，各類筆數相加等於資料列數 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：單獨列出整列相同的列，並告知兩種選項都不會匯入 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 整列相同的列在兩種選項下都不匯入，其餘依選項處理 ［範例 1｜略過重複｜1｜3］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 整列相同的列在兩種選項下都不匯入，其餘依選項處理 ［範例 2｜照樣匯入｜2｜2］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：只與「與既有重複的列」重複的後面列，歸為檔內重複，略過重複時兩列都不匯入 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 前後空白自動去除後再檢查與比對 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：一列同時有格式錯誤與重複時，以格式錯誤為準 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 選擇略過重複：與既有資料重複的列不匯入 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 混合檔案：略過重複與照樣匯入的匯入筆數與保留的列 ［範例 1｜略過重複｜2｜2］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 混合檔案：略過重複與照樣匯入的匯入筆數與保留的列 ［範例 2｜照樣匯入｜4｜0］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 選擇照樣匯入：與既有資料的同車頭、同車尾、同身分證不同姓名照樣匯入 ［範例 1｜929-X2｜30-1B｜李美玲］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 選擇照樣匯入：與既有資料的同車頭、同車尾、同身分證不同姓名照樣匯入 ［範例 2｜929-X3｜20-9A｜李美玲］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 選擇照樣匯入：與既有資料的同車頭、同車尾、同身分證不同姓名照樣匯入 ［範例 3｜929-X3｜30-1B｜王小名］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 照樣匯入：與既有資料四欄完全相同的整列不匯入 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽後放棄，名單不變 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 照樣匯入後，重複的資料在名單上持續標示 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的預覽分類規則一致 ［範例 1｜.xls］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的預覽分類規則一致 ［範例 2｜CSV（有 BOM）］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的預覽分類規則一致 ［範例 3｜CSV（無 BOM）］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的匯入選項規則一致 ［範例 1｜.xls｜略過重複｜1］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的匯入選項規則一致 ［範例 2｜.xls｜照樣匯入｜2］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的匯入選項規則一致 ［範例 3｜CSV（有 BOM）｜略過重複｜1］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的匯入選項規則一致 ［範例 4｜CSV（有 BOM）｜照樣匯入｜2］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的匯入選項規則一致 ［範例 5｜CSV（無 BOM）｜略過重複｜1］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的匯入選項規則一致 ［範例 6｜CSV（無 BOM）｜照樣匯入｜2］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 1｜.xls］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 2｜CSV（有 BOM）］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式的前後空白自動去除後再檢查與比對 ［範例 3｜CSV（無 BOM）］ > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 名單上標示身分證有警示的資料 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "AB12345678"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 修正身分證後警示消失 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456788"
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 無網路時仍可查詢 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 無網路時仍可匯出 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 編輯時前後空白同樣自動去除 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 編輯既有資料並儲存 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 編輯時把車牌改成不合格格式會被擋下，原資料不變 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 編輯後放棄修改 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 刪除資料前須確認 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 刪除時取消確認，資料保留 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 重新開啟 App 後資料仍在 > Given 名單上有一筆資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A123456789"
+Error: not implemented: resetDbForTest
+ ❯ notImplemented src/data/notImplemented.ts:7:9
+      5|  */
+      6| export function notImplemented(name: string): never {
+      7|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      8| }
+      9|
+ ❯ resetDbForTest src/data/db.ts:17:10
+ ❯ World.freshDb tests/support/world.ts:85:11
+ ❯ tests/support/stepLib/common.ts:22:13
+ ❯ Object.fn tests/support/runFeature.ts:25:13
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/245]⎯
+
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時匯出只有標題列的範本檔 > Given 名單是空的
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 > Given 名單是空的
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時在畫面上匯出，取得只有標題列的範本檔 > Given 名單是空的
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 1｜.xlsx］ > Given 名單是空的
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 2｜.xls］ > Given 名單是空的
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 名單為空時各格式都匯出只有標題列的範本檔 ［範例 3｜CSV］ > Given 名單是空的
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 1｜.xlsx］ > Given 名單是空的
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 2｜.xls］ > Given 名單是空的
+ FAIL  tests/steps/excel-export.steps.ts > Feature: Excel 匯出 > Scenario: 各格式空名單匯出的範本檔可再匯入，預覽告知沒有可匯入的資料 ［範例 3｜CSV］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔案內容全部都能新增 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 ［範例 1｜929-X2｜20-9A｜王小明］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 ［範例 2｜929-X2｜20-9A｜王小明］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 ［範例 3｜929-X2｜20-9A｜王小明］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：檔內重複，第一次出現者算可新增、其餘算檔內重複 ［範例 4｜929-X2｜20-9A｜王小明］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：同一人多台車的列不算重複 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 1｜klp-7988｜OL-02｜李美玲］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 2｜KLP-7988｜ol-02｜李美玲］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 3｜KLP-7988｜OL02｜李美玲］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 4｜KLP-7988｜A-B-C｜李美玲］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 5｜KLP- 7988｜OL-02｜李美玲］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 6｜KLP-7988｜OL-02｜F131104093］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 7｜KLP-7988｜OL-02｜李美玲］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：車牌格式或必填有問題的列為錯誤列 ［範例 8｜OL-02｜李美玲｜F131104093］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 小寫車牌不會被自動轉成大寫，照樣匯入也不匯入 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 只含空白的儲存格視為留空 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 數字型儲存格讀取顯示的文字 ［範例 1｜7｜007］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 數字型儲存格讀取顯示的文字 ［範例 2｜7｜7］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 數字型儲存格的值不符車牌格式時為錯誤列 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 預覽：身分證不合格的列只警示，仍算可新增 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 缺少必要的欄位標題時整份檔案不接受 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 欄位順序與匯出不同，仍依標題對應 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 只有標題列、沒有資料列的檔案 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 完全空白的檔案 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 不是 Excel 的檔案 ［範例 1｜內容是隨機二進位資料的檔案］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 不是 Excel 的檔案 ［範例 2｜副檔名是 .xlsx 但內容已損毀的檔案］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 略過重複：檔內重複組只保留第一次出現的那一列 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 選擇照樣匯入：檔內的同車頭、同車尾、同身分證不同姓名兩列都匯入 ［範例 1｜929-X2｜20-9A｜王小明］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 選擇照樣匯入：檔內的同車頭、同車尾、同身分證不同姓名兩列都匯入 ［範例 2｜929-X2｜20-9A｜王小明］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 選擇照樣匯入：檔內的同車頭、同車尾、同身分證不同姓名兩列都匯入 ［範例 3｜929-X2｜20-9A｜王小明］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 照樣匯入：檔內四欄完全相同的整列只保留第一列 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 照樣匯入：格式錯誤的列仍然不匯入 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 身分證不合格的列在略過重複時照常匯入 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上預覽並匯入 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 舊式 .xls 檔可預覽並匯入 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: .xls 的數字型儲存格同樣讀取顯示的文字 ［範例 1｜7｜007］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: .xls 的數字型儲存格同樣讀取顯示的文字 ［範例 2｜7｜7］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: UTF-8 CSV 可預覽並匯入，不論有無 BOM；前導 0 保留為字串 ［範例 1｜CSV（有 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: UTF-8 CSV 可預覽並匯入，不論有無 BOM；前導 0 保留為字串 ［範例 2｜CSV（無 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: CSV 的欄位內含逗號、被引號包住的欄位依規則解析 ［範例 1｜CSV（有 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: CSV 的欄位內含逗號、被引號包住的欄位依規則解析 ［範例 2｜CSV（無 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 非 UTF-8 的 CSV 不接受，提示以 CSV UTF-8 另存 ［範例 1｜內容為一列資料：車頭 "929-X2"、車尾 "20-9A"、姓名 "王小明"、身分證 "A12］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 非 UTF-8 的 CSV 不接受，提示以 CSV UTF-8 另存 ［範例 2｜資料列的姓名含有中文字，其位元組不是合法的 UTF-8］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取 ［範例 1｜副檔名是 .csv 但內容是隨機二進位資料的檔案］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取 ［範例 2｜副檔名是 .xls、開頭為 D0 CF 11 E0 但內容被截斷的檔案］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 隨機二進位資料或損毀的檔案，不論副檔名一律無法讀取 ［範例 3｜副檔名是 .csv 但內容含有 NUL 位元組的檔案］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案格式依內容判定，不看副檔名 ［範例 1｜.xlsx｜UTF-8 CSV］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案格式依內容判定，不看副檔名 ［範例 2｜.csv｜.xlsx］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案格式依內容判定，不看副檔名 ［範例 3｜.csv｜.xls］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 檔案格式依內容判定，不看副檔名 ［範例 4｜.xls｜.xlsx］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 1｜.xls］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 2｜CSV（有 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式都依標題名稱對應欄位，與欄位順序無關 ［範例 3｜CSV（無 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受 ［範例 1｜.xls］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受 ［範例 2｜CSV（有 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式缺少必要的欄位標題時整份檔案不接受 ［範例 3｜CSV（無 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料 ［範例 1｜.xls］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料 ［範例 2｜CSV（有 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式只有標題列、沒有資料列時告知沒有可匯入的資料 ［範例 3｜CSV（無 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的 ［範例 1｜有效但沒有任何儲存格內容的 .xls 檔］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的 ［範例 2｜0 位元組的 .xls 檔］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的 ［範例 3｜0 位元組的 CSV 檔］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 各檔案格式完全空白的檔案不接受，告知檔案是空的 ［範例 4｜只有 BOM、沒有任何其他內容的 CSV 檔］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 合法 UTF-8 的純文字檔（非表格）依 CSV 讀取，因缺標題被拒絕 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: CSV 某列欄位少於標題列時，缺的欄位視為空白，必填缺漏成為格式錯誤 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: CSV 某列欄位多於標題列時，多出的欄位忽略，該列照常處理 > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽並匯入 ［範例 1｜.xls］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽並匯入 ［範例 2｜CSV（有 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇 .xls 或 CSV 檔預覽並匯入 ［範例 3｜CSV（無 BOM）］ > Given 名單是空的
+ FAIL  tests/steps/excel-import.steps.ts > Feature: Excel 匯入 > Scenario: 在畫面上選擇 Big5 編碼的 CSV 檔，畫面提示以 CSV UTF-8 另存 > Given 名單是空的
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 無網路時仍可新增 > Given 名單是空的
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 無網路時仍可預覽並匯入 Excel > Given 名單是空的
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 所有操作都不對外發出網路請求 > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 新增一筆合格的資料 > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 1｜車頭］ > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 2｜車尾］ > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 3｜姓名］ > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 必填欄位留空時不能存檔 ［範例 4｜身分證］ > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 只含空白的欄位視為留空 > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 小寫車牌擋下並說明原因，不自動轉成大寫 > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 車牌中間含空白仍算格式錯誤並擋下 > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 前後空白自動去除後存檔 > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 身分證不合格只警示，仍可存檔 > Given 名單是空的
+ FAIL  tests/steps/record-management.steps.ts > Feature: 名單管理 > Scenario: 名單為空時顯示空狀態 > Given 名單是空的
+Error: not implemented: resetDbForTest
+ ❯ notImplemented src/data/notImplemented.ts:7:9
+      5|  */
+      6| export function notImplemented(name: string): never {
+      7|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      8| }
+      9|
+ ❯ resetDbForTest src/data/db.ts:17:10
+ ❯ World.freshDb tests/support/world.ts:85:11
+ ❯ tests/support/stepLib/common.ts:19:13
+ ❯ Object.fn tests/support/runFeature.ts:25:13
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/245]⎯
+
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 1｜929-X2］ > When 我檢查車牌 "929-X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 2｜KLP-7988］ > When 我檢查車牌 "KLP-7988"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 3｜20-9A］ > When 我檢查車牌 "20-9A"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 4｜OL-02］ > When 我檢查車牌 "OL-02"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 5｜A-1］ > When 我檢查車牌 "A-1"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 合格的車牌格式 ［範例 6｜0012-007］ > When 我檢查車牌 "0012-007"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 1｜klp-7988｜PLATE_LOWERCASE］ > When 我檢查車牌 "klp-7988"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 2｜Klp-7988｜PLATE_LOWERCASE］ > When 我檢查車牌 "Klp-7988"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 3｜ＫＬＰ-7988｜PLATE_FULLWIDTH］ > When 我檢查車牌 "ＫＬＰ-7988"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 4｜929－X2｜PLATE_FULLWIDTH］ > When 我檢查車牌 "929－X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 5｜９２９-X2｜PLATE_FULLWIDTH］ > When 我檢查車牌 "９２９-X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 6｜929X2｜PLATE_NO_HYPHEN］ > When 我檢查車牌 "929X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 7｜929-X2-1｜PLATE_MULTI_HYPHEN］ > When 我檢查車牌 "929-X2-1"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 8｜-X2｜PLATE_EMPTY_PART］ > When 我檢查車牌 "-X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 9｜929-｜PLATE_EMPTY_PART］ > When 我檢查車牌 "929-"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 10｜929 -X2｜PLATE_INNER_WHITESPACE］ > When 我檢查車牌 "929 -X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 11｜9 29-X2｜PLATE_INNER_WHITESPACE］ > When 我檢查車牌 "9 29-X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 12｜929_X2｜PLATE_INVALID_CHAR］ > When 我檢查車牌 "929_X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 13｜929.X2｜PLATE_INVALID_CHAR］ > When 我檢查車牌 "929.X2"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 不合格的車牌格式一律擋下 ［範例 14｜REQUIRED］ > When 我檢查車牌 ""
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 車牌前後空白先去除再檢查 > When 我檢查車牌 " 929-X2 "
+Error: not implemented: checkPlate
+ ❯ notImplemented src/data/notImplemented.ts:7:9
+      5|  */
+      6| export function notImplemented(name: string): never {
+      7|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      8| }
+      9|
+ ❯ checkPlate src/data/validation.ts:5:10
+ ❯ tests/support/stepLib/fieldValidation.ts:9:15
+ ❯ Object.fn tests/support/runFeature.ts:25:13
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/245]⎯
+
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證前後空白先去除再檢查 > When 我檢查身分證 " A123456789 "
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證檢查碼正確則不警示 ［範例 1｜A123456789｜一般身分證］ > When 我檢查身分證 "A123456789"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證檢查碼正確則不警示 ［範例 2｜F131104093｜一般身分證］ > When 我檢查身分證 "F131104093"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證檢查碼正確則不警示 ［範例 3｜A800000014｜新式居留證，第二碼 8］ > When 我檢查身分證 "A800000014"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證檢查碼正確則不警示 ［範例 4｜B900000017｜新式居留證，第二碼 9］ > When 我檢查身分證 "B900000017"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證不合格只警示，不阻擋 ［範例 1｜A123456788｜ID_CHECKSUM］ > When 我檢查身分證 "A123456788"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證不合格只警示，不阻擋 ［範例 2｜A12345678｜ID_LENGTH］ > When 我檢查身分證 "A12345678"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證不合格只警示，不阻擋 ［範例 3｜A1234567890｜ID_LENGTH］ > When 我檢查身分證 "A1234567890"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證不合格只警示，不阻擋 ［範例 4｜a123456789｜ID_LOWERCASE］ > When 我檢查身分證 "a123456789"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證不合格只警示，不阻擋 ［範例 5｜1123456789｜ID_FIRST_NOT_ALPHA］ > When 我檢查身分證 "1123456789"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證不合格只警示，不阻擋 ［範例 6｜A12345678X｜ID_NON_DIGIT］ > When 我檢查身分證 "A12345678X"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證不合格只警示，不阻擋 ［範例 7｜AB12345678｜ID_LEGACY_RESIDENCE］ > When 我檢查身分證 "AB12345678"
+ FAIL  tests/steps/field-validation.steps.ts > Feature: 欄位格式檢查 > Scenario: 身分證中間含空白只警示，不阻擋 > When 我檢查身分證 "A123 56789"
+Error: not implemented: checkIdNumber
+ ❯ notImplemented src/data/notImplemented.ts:7:9
+      5|  */
+      6| export function notImplemented(name: string): never {
+      7|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      8| }
+      9|
+ ❯ checkIdNumber src/data/validation.ts:9:10
+ ❯ tests/support/stepLib/fieldValidation.ts:13:17
+ ❯ Object.fn tests/support/runFeature.ts:25:13
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/245]⎯
+
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 新版本更新期間不中斷目前操作，也不遺失資料 > And 更新機制不會清除或重建本機資料庫
+Error: not implemented: resetDbForTest
+ ❯ notImplemented src/data/notImplemented.ts:7:9
+      5|  */
+      6| export function notImplemented(name: string): never {
+      7|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      8| }
+      9|
+ ❯ resetDbForTest src/data/db.ts:17:10
+ ❯ World.freshDb tests/support/world.ts:85:11
+ ❯ tests/support/stepLib/offline.ts:119:13
+ ❯ Object.fn tests/support/runFeature.ts:25:13
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/245]⎯
+
+ FAIL  tests/steps/offline-use.steps.ts > Feature: 離線使用與本機資料 > Scenario: 畫面說明資料只存在這台裝置並提醒備份 > When 我開啟 App
+AssertionError: 名單頁沒有載入完成（找不到名單表格、空狀態或查無結果）。目前畫面文字：「ochema」: expected null not to be null
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<main>[39m
+        [36m<h1>[39m
+          [0mochema[0m
+        [36m</h1>[39m
+      [36m</main>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ tests/support/ui.ts:96:13
+     94|         loaded,
+     95|         `名單頁沒有載入完成（找不到名單表格、空狀態或查無結果）。目前畫面文字：「${norm(document.body.text…
+     96|       ).not.toBeNull()
+       |             ^
+     97|     }, WAIT)
+     98|   }
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/245]⎯
+
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+ FAIL  tests/steps/search.steps.ts > Feature: 查詢名單 > Background: > Given 名單上有以下資料：
+Error: not implemented: resetDbForTest
+ ❯ notImplemented src/data/notImplemented.ts:7:9
+      5|  */
+      6| export function notImplemented(name: string): never {
+      7|   throw new Error(`not implemented: ${name}`)
+       |         ^
+      8| }
+      9|
+ ❯ resetDbForTest src/data/db.ts:17:10
+ ❯ World.freshDb tests/support/world.ts:85:11
+ ❯ tests/support/stepLib/common.ts:29:15
+ ❯ Object.fn tests/support/runFeature.ts:25:13
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:74:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/245]⎯
+
+
+ Test Files  7 failed | 2 passed (9)
+      Tests  245 failed | 44 passed | 837 skipped (1126)
+   Start at  12:39:28
+   Duration  10.00s (environment 49%, import 23%, tests 18%, transform 8%, setup 2%)
+
+Environment  jsdom was created 9 times · 17.49s total, 49% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

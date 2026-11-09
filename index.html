@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover 讓版面能用 env(safe-area-inset-*) 避開瀏海與底部 Home 指示條 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F3EDDD" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#17140F" />
+
+    <!-- iOS 加入主畫面：apple-touch-icon 是唯一被採用的圖示來源 -->
+    <link rel="apple-touch-icon" href="/ochema/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/ochema/favicon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ochema" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- 首繪前套用外觀偏好，避免載入時閃白（偏好存在本機 localStorage） -->
+    <script>
+      try {
+        var t = localStorage.getItem('ochema-theme')
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t)
+      } catch (e) {}
+    </script>
+    <title>ochema 車輛所屬名單</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "name": "車輛所屬名單查詢",
+  "created": "2026-11-09T10:01:39",
+  "parse_cmd": "",
+  "dryrun_cmd": "scripts/bdd-dryrun.sh",
+  "test_cmd": "npx vitest run",
+  "skip": [],
+  "gates": {
+    "A": {
+      "status": "passed",
+      "at": "2026-11-09T11:36:19",
+      "failures": []
+    },
+    "B": {
+      "status": "passed",
+      "at": "2026-11-09T11:51:01",
+      "failures": []
+    },
+    "C": {
+      "status": "passed",
+      "at": "2026-11-09T13:55:41",
+      "failures": []
+    },
+    "D": {
+      "status": "passed",
+      "at": "2026-11-09T14:54:46",
+      "failures": []
+    }
+  },
+  "approvals": {
+    "A": {
+      "at": "2026-11-09T11:50:16",
+      "note": "使用者重新核可 141 情境（新增 .xls/CSV 匯入、三格式匯出；decisions/B-gate.md）",
+      "fingerprint": "0ecfad7fcc23d8413c54b9493647506a226433e0b296211374ac1e01ac189cf5"
+    },
+    "B": {
+      "at": "2026-11-09T11:51:01",
+      "note": "使用者核可 DBML（vehicle_records）＋設計方向 ledger",
+      "fingerprint": "67d05c2f1a14af7e3d3243916d8f82a602bc621729f611b6cd73cb6b4d42cc8f"
+    }
+  },
+  "retries": {
+    "A": 2,
+    "C": 1
+  }
+}
