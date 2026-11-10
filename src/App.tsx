@@ -65,7 +65,7 @@ export function App({ download = browserDownload }: AppProps) {
   // 單頁應用切換畫面時瀏覽器不會自己做的事：更新標題，並把焦點移到新畫面的標題（讀屏因此會念出新畫面）。首次載入不搶焦點。
   const firstRoute = useRef(true)
   useEffect(() => {
-    document.title = `${ROUTE_TITLE[route]} — ochema`
+    document.title = `${ROUTE_TITLE[route]} — 土方車輛`
     if (firstRoute.current) {
       firstRoute.current = false
       return
@@ -140,7 +140,7 @@ export function App({ download = browserDownload }: AppProps) {
               №
             </span>
             <h1>
-              ochema<small>車輛所屬名單</small>
+              土方車輛
             </h1>
           </div>
           <nav className="mainnav" aria-label="主要導覽">

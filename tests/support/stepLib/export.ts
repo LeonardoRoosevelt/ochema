@@ -130,7 +130,7 @@ export function registerExport(r: Reg) {
     const want = formatOf(label)
     const { file, format } = downloaded(w)
     expect(format, `檔名副檔名 ${file.fileName}`).toBe(want)
-    expect(file.fileName).toMatch(new RegExp(`^ochema-名單-\\d{8}-\\d{4}\\.${EXPORT_FORMATS[want].ext}$`))
+    expect(file.fileName).toMatch(new RegExp(`^土方車輛-名單-\\d{8}-\\d{4}\\.${EXPORT_FORMATS[want].ext}$`))
     expect(file.mimeType).toBe(EXPORT_FORMATS[want].mime)
     if (want === 'csv') expect(startsWithBom(file.bytes)).toBe(true)
     else expect([...file.bytes.slice(0, 4)]).toEqual(MAGIC[want])

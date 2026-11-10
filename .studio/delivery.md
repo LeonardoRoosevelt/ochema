@@ -110,3 +110,13 @@
 - 需求 `features/`、資料 `schema.dbml`、契約 `docs/data-contract.md`、IA `design/ia.md`、設計 `design/directions/ledger/`
 - 審查 `.studio/reviews/`、裁決 `.studio/decisions/`、流程紀錄 `.studio/log.md`、交接 `.studio/handoffs/`
 - 證據 `.studio/evidence/`（red.txt、test-C/D.txt、evidence-summary.md、axe.json、a11y-review.md、screens/、downloads/）
+
+## 附錄：交付後變更三（2026-11-10）App 名稱改為「土方車輛」
+
+使用者裁決：所有看得到的地方都改名。
+- 頁首、分頁標題（例如「名單 — 土方車輛」）、安裝名稱與 iPhone 主畫面名稱（manifest 的 name、short_name 與 apple-mobile-web-app-title）都改成「土方車輛」。
+- 匯出檔名改為「土方車輛-名單-YYYYMMDD-HHmm.<副檔名>」。
+- **刻意不動**：網址 `/ochema/`、IndexedDB 資料庫名稱 `ochema`、主題設定鍵 `ochema-theme`。改了等於換掉儲存區，名單會讀不到。名單表格的讀屏名稱「車輛所屬名單」描述的是表格內容，也維持原樣。
+- 製片人自行決定：頁首標題取消斜體。斜體是為英文 ochema 設計的，中文字會被瀏覽器硬拉斜。
+- 情境（features）沒有變動。一般測試同步改成新名稱：tests/data/export.test.ts、tests/support/stepLib/export.ts、tests/ui/a11y.test.tsx。結果 1400 passed、10 todo、0 failed；`vite build` 成功，manifest 的 name 為「土方車輛」。
+- 尚未驗證：沒有重拍實機截圖；iPhone 上已經加入主畫面的圖示，名稱可能要刪掉重新加入才會更新（刪除前務必先匯出備份）。

@@ -34,8 +34,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'ochema 車輛所屬名單',
-        short_name: 'ochema',
+        name: '土方車輛',
+        short_name: '土方車輛',
         description: '車頭、車尾、姓名、身分證的離線查詢名單。資料僅存於本機。',
         lang: 'zh-Hant',
         dir: 'ltr',

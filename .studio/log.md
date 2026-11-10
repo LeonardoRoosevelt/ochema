@@ -124,3 +124,6 @@
 - 2026-11-09T20:29:36 check C：通過
 - 2026-11-09T20:30:01 check D：通過
 - 製片人：終審通過（有條件）。修過期通知（App onCommitted 清 notice/flash＋staleNotice 測試，紅→綠）；ia.md 加註取代；delivery.md 更新。check C、D 通過，1400 passed。
+- 2026-11-10 使用者要求 App 名稱改「土方車輛」（全部可見處，含匯出檔名）；網址／DB 名不動。1400 passed、build 通過。
+- 2026-11-10T10:03:04 check C：通過
+- 2026-11-10T10:03:36 check D：通過

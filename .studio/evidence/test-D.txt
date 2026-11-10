@@ -7,9 +7,9 @@ exit=0
 
  Test Files  22 passed (22)
       Tests  1400 passed | 10 todo (1410)
-   Start at  20:29:37
-   Duration  24.47s (tests 76%, environment 18%, import 4%, transform 1%, setup 1%)
+   Start at  10:03:04
+   Duration  31.09s (tests 76%, environment 18%, import 4%, transform 1%, setup 1%)
 
-    Isolate  22 workers spawned · ~880ms startup each (spawn + environment, per file)
-             at least ~3.96s faster with isolate: false — reuses workers across files instead of one per file
+    Isolate  22 workers spawned · ~1.11s startup each (spawn + environment, per file)
+             at least ~5.00s faster with isolate: false — reuses workers across files instead of one per file
 

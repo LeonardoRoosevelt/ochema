@@ -42,11 +42,11 @@ describe('.xls 列數上限（契約附錄 Q-F）', () => {
 })
 
 describe('exportFileName', () => {
-  it('ochema-名單-YYYYMMDD-HHmm.<ext>，月日時分補零，副檔名隨格式', () => {
+  it('土方車輛-名單-YYYYMMDD-HHmm.<ext>，月日時分補零，副檔名隨格式', () => {
     const d = new Date(2026, 0, 5, 3, 7)
-    expect(exportFileName(d)).toBe('ochema-名單-20260105-0307.xlsx')
-    expect(exportFileName(d, 'xls')).toBe('ochema-名單-20260105-0307.xls')
-    expect(exportFileName(d, 'csv')).toBe('ochema-名單-20260105-0307.csv')
+    expect(exportFileName(d)).toBe('土方車輛-名單-20260105-0307.xlsx')
+    expect(exportFileName(d, 'xls')).toBe('土方車輛-名單-20260105-0307.xls')
+    expect(exportFileName(d, 'csv')).toBe('土方車輛-名單-20260105-0307.csv')
   })
 })
 

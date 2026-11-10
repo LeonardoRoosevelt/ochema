@@ -74,20 +74,20 @@ describe('發現 2：觸發點消失後焦點不能掉到 <body>', () => {
 describe('發現 3：切換分頁時移焦點到新畫面標題並更新 document.title', () => {
   it('名單 → 總覽 → 資料 → 名單', async () => {
     await openApp(rec(1))
-    expect(document.title).toBe('名單 — ochema')
+    expect(document.title).toBe('名單 — 土方車輛')
     // 首次載入不搶焦點
     expect(document.activeElement).toBe(document.body)
 
     fireEvent.click(screen.getByRole('link', { name: /^總覽/ }))
-    await waitFor(() => expect(document.title).toBe('總覽 — ochema'), WAIT)
+    await waitFor(() => expect(document.title).toBe('總覽 — 土方車輛'), WAIT)
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: '重複與警示總覽', level: 2 })), WAIT)
 
     fireEvent.click(screen.getByRole('link', { name: /^資料$/ }))
-    await waitFor(() => expect(document.title).toBe('資料 — ochema'), WAIT)
+    await waitFor(() => expect(document.title).toBe('資料 — 土方車輛'), WAIT)
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: '資料與備份', level: 2 }))
 
     fireEvent.click(screen.getByRole('link', { name: /^名單$/ }))
-    await waitFor(() => expect(document.title).toBe('名單 — ochema'), WAIT)
+    await waitFor(() => expect(document.title).toBe('名單 — 土方車輛'), WAIT)
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: '名單', level: 2 }))
   })
 })
