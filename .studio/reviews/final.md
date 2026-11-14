@@ -1,75 +1,43 @@
 判定：通過
 
-# 現實檢驗報告（終審重審：匯入改為整份替換）
-評估日期：2026-11-09　整體品質：B-（替換規則本身有情境、測試、實機三層證據；但替換後殘留過期通知、交付文件與設計文件未同步，須修正或如實列入）　生產就緒：有條件通過。條件見文末「放行條件」。
+# 終審：點擊複製名單欄位（範圍僅限本功能）
 
-## 現實檢查驗證
-- 獨立重跑 `npm_config_cache=$TMPDIR/npm-cache npx vitest run`：21 檔全過，**1399 passed、10 todo、0 failed**（24.8 秒），與 test-C.txt（1399）一致。
-- features 共 142 個情境（15+7+24+54+10+23+9 依 Scenario／Scenario Outline 行數），與門禁 A 核可數一致。
-- 讀 src/data/importer.ts 全檔、src/ui/ReplaceDialog.tsx 全檔、ImportView.tsx 相關段落、scripts/evidence.mjs 匯入群組（440–610 行）、C-2 審查、evidence-summary（41/41、console 0、對外請求 0、axe 違規 0）。
-- 逐張讀過內容的截圖共 8 張：18 xls desktop、20 xlsx mobile、21 desktop、21 mobile、21a desktop、21b mobile、22 desktop、23 desktop；其餘（18／19／20 其他格式與尺寸、22／23 mobile、21a／21b 另一尺寸）只依 evidence-summary 與腳本斷言，未逐張讀。
-- 沙箱內無法啟動瀏覽器，未自行重跑實機腳本；實機結論只依既有截圖與 evidence-summary。
+評分：B（功能正確、測試有意圖；手機觸控與機制性提示不足，需下一輪修）
+生產就緒性：本功能 READY，附中度問題待追（見下）。
 
-## 一、替換規則逐條對照（使用者裁決 import-replace.md）
+## 我自己跑的證據（不採信回報）
+- `npm_config_cache=$TMPDIR/npm-cache npx vitest run`：23 檔 passed，Tests 1434 passed | 10 todo（與工程回報 green-copy-full.txt 一致）。
+- `git diff` 顯示 tests/ 只動 stepLib/index.ts（註冊）與 support/ui.ts（掛假剪貼簿並於 dispose 還原），沒有任何既有 tests/ui/*、features/ 被改動，無放寬。
+- 讀過 desktop／mobile 的 10a 截圖：訊息「已複製「20-9A」」可見，四格值為純文字。
+- 沙箱無瀏覽器：焦點外框、手機觸控、iPhone Safari 我無法親自驗證，僅能引用 evidence-summary.md（42/42，10a 在真 Chromium 讀回剪貼簿＝20-9A）。
 
-| 規則 | 情境 | 測試 | 實機 |
-|---|---|---|---|
-| 1 確認後清空再寫入，不累計 | excel-import.feature:166「替換成功…原有資料不再存在」、:415 UI 版 | tests/data/importer.test.ts:123（清掉既有資料、id 順序＝檔案列序、deleted/imported/merged） | 22：「已刪除 3 筆、已匯入 4 筆」；23：名單共 4 筆、舊資料「李大華」已不在（腳本斷言） |
-| 2 任何格式錯誤列→整份擋下 | feature 內「含格式錯誤…確認匯入不可用」＋三格式 Outline | importer 單測 FORMAT_ERRORS；ImportView 元件測試；C-2 變異 M4／M7 被抓 | 18／19／20（xls／csv／xlsx）：格式錯誤 1 筆、確認匯入為 aria-disabled、原因文字「整份不會匯入，所以不能確認」、列出錯誤列與原因（18 desktop 可見）；20 後切回名單仍 3 筆 |
-| 3 檔內重複照匯入並標示；整列相同只留第一筆；無選項 | :476 替換後持續標示；「預覽沒有任何讓我選擇如何處理重複列的選項」 | buildPreview 單測（優先序、錯誤列不入比對、連鎖）；元件測試斷言無「略過重複／照樣匯入」；C-2 M2／M3 被抓 | 21：統計 3/1/1/0＝5 列、整列相同提醒「檔案第 4 列與第 3 列整列相同」；23：兩筆「同車頭車號」標章持續顯示；腳本斷言 radio 數＝0 |
-| 4 預覽寫明「將刪除 N、匯入 M」＋二次確認（預設焦點取消、可先匯出） | :415、「二次確認框中按取消」、「可先匯出」 | 元件測試焦點在取消（C-2 M5 被抓）；先匯出不關框不替換（M6 被抓） | 21（「將刪除目前 3 筆、匯入 4 筆」）、21a（焦點＝取消、取消後仍 3 筆）、21b（匯出 .xlsx 16459 bytes、框仍開、仍 3 筆）。21a／21b 截圖內容與文案相符，含「替換後無法復原」 |
-| 4b 空名單也要二次確認 | 無獨立情境（製片人裁決 3 說明 Enter 行為不另寫；空名單由 :476 以 @ui 流程經過對話框） | tests/ui/importView.test.tsx:111「名單是空的（將刪除 0 筆）也要二次確認」 | **無實機截圖**（證據腳本沒有空名單替換步驟）。僅 jsdom |
-| 5 保留手動新增／編輯／刪除 | record-management 15 情境未動 | 全套綠 | 03、11、12 步通過（本輪重跑） |
-| 6 空檔／只標題／無法讀取／缺標題／非 UTF-8 擋下；身分證警示列照匯入；單一交易失敗則原狀 | :363、:372、:380、:317、:498 等 | importer.test.ts:160–190（NOTHING_TO_IMPORT、WRITE_FAILED）；tests/ui 有「寫入失敗」案 | 被擋下類別只有 jsdom／@api，**實機只覆蓋格式錯誤擋下**；實機也無寫入失敗畫面 |
+## 五個情境對照意圖
+| 情境 | 證據 | 結論 |
+|---|---|---|
+| 點任一欄只複製該值（4 例） | copy.ts:47-53 以 `writes toEqual([value])` 斷言完全相等＋訊息含「已複製「值」」；若複製整列／加前綴會失敗 | PASS |
+| 查詢標示後仍複製完整值 | 值取自 r.headPlate（RecordTable.tsx:85），不是 DOM 文字；測試在 `<mark>` 分段下仍斷言 `["KLP-7988"]` | PASS |
+| 鍵盤 | copy.ts:42-44 真的 user.tab() 迴圈走到按鈕（上限 60 次）才按 Enter，不是直接 click/focus | PASS |
+| 不開編輯、不改名單 | copy.ts:67-76 查無表單／dialog，並同時查畫面列數與資料庫筆數 | PASS |
+| 失敗 | copy.ts:55-65：writes 為空、訊息含「無法複製」與值、不含「已複製」、無 msg-ok 樣式。實作 App.tsx:101-108 用 tone=warn（Flash.tsx:51-53） | PASS |
 
-## 二、交易失敗時名單維持原狀：有測試證明，不只是宣稱
-- 情境 excel-import.feature:317：先放 2 筆、注入「第 1 筆之後失敗」，斷言「匯入失敗並告知原因」「名單上仍有 2 筆，與匯入前完全相同」「沒有李美玲與張志豪」。
-- 單元 tests/data/importer.test.ts:166：失敗後 `listRecords()`（含 id）與失敗前 `toEqual`，標題寫明 clear 也一併回滾；另有「注入是一次性」案（:175）防外洩。
-- 實作 importer.ts：count→clear→add* 在同一 readwrite 交易，catch 內 `tx.abort()`。C-2 變異 M1（拿掉 abort）有 2 項失敗，證明測試真的鎖住回滾。
-- 殘餘缺口：故障是以測試接縫在第 n 筆 add 之後人為丟錯，驗證的是「abort 會回滾」，不是真實 IndexedDB 配額／中斷。真實瀏覽器（含 iPhone Safari）寫入失敗沒有證據。屬自述限制，見下。
-- importer.ts:105 附近 `injectImportWriteFault(n)` 在 n 大於實際寫入筆數時不觸發（C-2 已記，低）。
+表格前四格 textContent 仍是值：按鈕內只放值（RecordTable.tsx:37-43），名稱走 aria-label，既有測試全綠可證。
 
-## 三、證據腳本 force 點擊是否放寬驗證
-腳本 evidence.mjs:477–479 對 aria-disabled 的「確認匯入」用 `click({ force: true })`，點後斷言 `二次確認框` 數量為 0，且 :466 另行斷言按鈕為 aria-disabled、無「將刪除目前」文字、無 radio；ImportView.tsx:483 `onClick` 內仍有 `canConfirm &&` 守衛（C-2 M4 已證明拿掉會失敗）。force 反而是真的把按鈕按下去驗防護，沒有放寬；原本不用 force 只是 Playwright 的可操作性檢查對 aria-disabled 一直等待。唯一小弱點：點擊後「無對話框」是立即檢查，若對話框非同步開啟會漏判；元件測試有同向斷言補強。判定：未放寬。
+## 無障礙
+- 名稱：「複製車頭車號 KLP-7988」格式一致，真 `<button>`，Tab/Enter/Space 原生支援。
+- 焦點：沿用全域 `:focus-visible{outline:3px…!important}`（styles.css:15），.cellcopy 未覆蓋 outline，理論上有外框；未實機看過（無證據）。
+- 讀屏重複：aria-label 取代按鈕內容，值不會被唸兩次；訊息在 role=status 常駐容器，關閉鈕在容器外（Flash.tsx:49,65）。同值連按以 key=id 重建節點，會再播報。
 
-## 四、舊文案／舊文件殘留
-已清乾淨：README.md:55–58 已是整份替換說明；src 內無「略過重複／照樣匯入／與既有資料重複」使用者可見文字（rg 僅剩 tests/ui/importView.test.tsx:71 的「不應出現」斷言與註解、duplicates.ts／types.ts 對手動新增衝突的合理用語）；docs/data-contract.md:682 舊規則已劃線並註明被 import-replace 取代（C-2 建議已採納）。
+## 問題清單
+中度：
+1. 手機觸控面積不足。`.cellcopy`（styles.css:83）無 min-height／padding；手機卡片 td padding:0（styles.css:95），姓名、身分證兩格可點範圍只有一行文字高（約 20 多 px），低於本專案其他按鈕一律 44px 的標準（styles.css:46,61,326）。此功能的主要場景是手機，且無實機量測證據。建議 `.cellcopy` 在手機加 `min-height:44px`、讓按鈕撐滿 td。
+2. 可發現性：只有桌面 hover 才看得到淡底＋虛線（styles.css:84）；觸控與非 hover 使用者沒有任何「可點」提示（名單頁無說明文字）。建議在 .help 或查詢區加一句「點車號／姓名／身分證可複製」。
+3. 鍵盤 Tab 停駐點暴增：每列多 4 個停駐點，PAGE_SIZE=200 時最多 800 個才走到列尾的編輯／刪除（RecordTable.tsx:7,85-108）。可考慮 roving tabindex 或提供略過；本次未列為阻擋，因 Enter 情境已證明可用。
 
-**仍殘留（中度）**
-1. `.studio/delivery.md` 完全未反映替換：頁首交付後變更只寫改名；第 1 節仍寫 1377 passed、39/39；第 4 節「匯入分類…與既有優先、照樣匯入也不匯入整列相同」；**第 5 節第 6 點仍寫「匯入確認：兩個選項一律顯示、不預選」**；第 6 節已知限制沒有任何替換相關風險。使用者若讀這份交付報告會得到與實際行為相反的描述。
-2. `design/ia.md` S4b／S4c（行 160–206、372）仍是舊規格：統計列含「與既有資料重複」、「略過重複／照樣匯入」單選、結果訊息「已匯入 N 筆、略過 M 筆」。此檔被交付報告列為文件索引，且無「已被取代」註記。屬設計文件，不影響執行，但與 features 矛盾。
+輕度／已知限制：
+4. 非 HTTPS 或 clipboard 不存在時，`navigator.clipboard.writeText` 丟 TypeError，被 try/catch 接住走失敗訊息（App.tsx:103-107）——程式邏輯正確，但測試只模擬「拒絕」，沒有「API 不存在」的案例（clipboard.ts:18）。已知限制請補進使用說明（HTTPS／localhost 才可複製）。
+5. iPhone Safari 未實測（寫入在 click 同步呼叫內，理論符合 user-gesture 要求，但無證據）。請使用者實測並回報。
+6. 手機 10a 截圖顯示 FAB「新增資料」壓在第二張卡的車斗車號上（既有版面，非本功能引入），會擋住該格點擊；一併留意。
+7. 失敗訊息把完整身分證顯示在畫面 8 秒（App.tsx:107）。這是裁決要求「顯示值」，屬刻意取捨，僅記錄。
 
-## 五、新發現的實作缺陷（中度）
-**替換後名單頁仍顯示過期的「已儲存」通知，且指向已被刪除的資料。**
-- 證據：截圖 23-替換後名單 desktop 的頂端黃色通知寫「已儲存「陳小美」，但有需要留意的地方…駕駛身分證 A123456788 已存入」，而名單 4 筆裡根本沒有陳小美（她在 SEED3，已被整份替換掉）。20／21／21b／23 mobile 另見 sticky 的「已儲存：111-AA／22-BB／陳小美」Flash 疊在匯入預覽上方（Flash 8 秒自動消失，屬截圖時機；但通知 notice 不會消失）。
-- 根因：src/App.tsx:42 `notice` 狀態只由 onDismissNotice（:187）與新增／編輯存檔更新；`<ImportView onCommitted={refresh}>`（:213）只刷新名單，替換後不清 `notice`。
-- 影響：使用者先新增一筆有警示的資料、再整份替換後，畫面仍宣稱那筆「已儲存」，與「資料已被刪除」互相矛盾；在「誤操作整份覆蓋」情境下更易誤導。不涉及資料遺失。
-- 為何沒被測出：證據腳本第 23 步只斷言舊的「李大華」消失，未斷言通知；features 沒有「替換後清除過期通知」情境。這是測試的盲點，不是已驗證通過。
-
-## 六、其他問題
-- 低：實機證據對替換後的名單內容只斷言筆數與「同車頭車號」標章、一筆舊姓名消失；未逐筆比對 4 筆內容與檔案。BDD @ui 情境（:415）有逐筆姓名斷言，補足此缺口。
-- 低：先前問題 1（頂部 sticky Flash 遮住內容）仍可見——18 desktop 的「匯入預覽」標題被 Flash 壓住、20 mobile 的 Flash 蓋在錯誤明細上。已在 delivery.md 已知限制記載，本輪未改善。
-- 低：evidence/downloads/ 仍有 …-2002 與 …-2004 一組舊檔（前一輪），與 …-2018 重複；內容不衝突，惟易混淆。
-- 低：預覽顯示的「將刪除目前 N 筆」是預覽當下的數字；若使用者在其他分頁同時改了名單，二次確認框的 N 可能與實際不同（結果訊息以交易內實際 count 為準，契約已載明）。單人單裝置下風險小，建議列已知限制。
-- 沿用 C-2 低度建議（BDD「畫面顯示」未驗「合併 K」文字等），不阻擋。
-
-## 七、已知限制是否誠實
-沿用先前清單仍成立（VoiceOver 未實測、a11y 修正後未重審、iPhone Safari／真實 Excel .xls 未驗、CSV 公式注入、CRLF→LF、截斷 .xls、sticky Flash、重複命名、佔位圖示、SheetJS 靜態 import 的 bundle 大小）。目前 delivery.md **沒有**列出下列替換相關的新風險，交付前必須加入：
-1. **誤操作整份覆蓋**：替換不可復原，手動新增的資料也會被取代；保護僅有預覽文字、二次確認（預設取消）、「先匯出目前資料」按鈕——使用者可略過匯出；沒有「復原」、沒有自動備份。
-2. 真實瀏覽器寫入失敗（配額、iOS 回收儲存）未驗證，回滾只經測試接縫模擬。
-3. 空名單二次確認、空檔／只標題列／非 UTF-8 擋下、寫入失敗畫面皆無實機截圖，只有 jsdom／@api 證據。
-4. 上列第五節的過期通知缺陷（若不修）。
-5. 「將刪除 N 筆」為預覽時數字（多分頁情境）。
-
-## 八、現實質量認證
-- 整體品質：B-。替換的資料層（單一交易、四類互斥分類、錯誤列整份擋下）紮實：變異 7/7 被抓、1399 全綠經獨立重跑、實機 41/41。扣分在替換後 UI 殘留過期通知、兩份文件與實際行為矛盾、替換相關風險尚未誠實列出。
-- 設計實現：良好；系統完整性：替換規則 6 條皆有實作與測試，其中 UI 層 5 條有實機證據，空名單二次確認與寫入失敗為 jsdom 證據。
-- 規格合規性：PASS（features 142 情境逐條綠、鎖定檔未動）。
-
-## 放行條件（交付前須完成，皆不需改鎖定的 features／schema）
-1. 更新 `.studio/delivery.md`：測試數 1399、實機 41/41、替換變更說明、改正第 5 節第 6 點，並把第七節 1–5 加進已知限制。
-2. 修正過期通知（App 在替換成功後 `setNotice(undefined)`），或在已知限制明載；若修，建議補一個元件測試或在證據腳本第 23 步加斷言，並重拍 23。
-3. 在 `design/ia.md` S4b／S4c 加註「已被 import-replace 裁決取代」，或更新內容。
-4. 交付報告不得宣稱「無障礙已通過」「已在 iPhone／真實 Excel 驗證」。
-
-若使用者實機驗收（尤其整份替換、寫入失敗、iPhone Safari）發現問題，需重新評估。
+## 結論
+5 個情境皆有意圖測試且重跑全綠，既有測試未放寬，無嚴重問題；中度問題 1-3 建議下一輪處理，使用者需在 iPhone 實測後才能算真機驗收完成。

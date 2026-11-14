@@ -48,6 +48,7 @@ import { expect } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within, type RenderResult } from '@testing-library/react'
 import { App, type DownloadedFile } from '../../src/App'
 import type { RecordFields } from '../../src/data/types'
+import { FakeClipboard } from './clipboard'
 import { NetworkGuard } from './network'
 
 export const LIST_NAME = '車輛所屬名單'
@@ -68,6 +69,7 @@ export const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, 
 export class Ui {
   readonly downloads: DownloadedFile[] = []
   readonly network = new NetworkGuard()
+  readonly clipboard = new FakeClipboard()
   private view?: RenderResult
 
   // ── 啟動 ────────────────────────────────────────────
@@ -114,6 +116,7 @@ export class Ui {
     this.view = undefined
     cleanup()
     this.network.uninstall()
+    this.clipboard.uninstall()
   }
 
   // ── 導覽 ────────────────────────────────────────────

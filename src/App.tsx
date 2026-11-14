@@ -92,10 +92,20 @@ export function App({ download = browserDownload }: AppProps) {
   const shown = useMemo(() => filterRecords(records, keyword.applied), [records, keyword.applied])
   const problems = overview ? overview.duplicateGroups.length + overview.idWarnings.length : 0
 
-  const say = useCallback((body: FlashData['body'], seal = false) => {
-    setFlash((f) => ({ id: (f?.id ?? 0) + 1, body, seal }))
+  const say = useCallback((body: FlashData['body'], seal = false, tone?: FlashData['tone']) => {
+    setFlash((f) => ({ id: (f?.id ?? 0) + 1, body, seal, ...(tone ? { tone } : {}) }))
   }, [])
   const expire = useCallback((id: number) => setFlash((f) => (f?.id === id ? undefined : f)), [])
+
+  /** 只把該格的值寫入剪貼簿；API 不存在或被拒絕時，訊息裡帶出值讓使用者手動選取。 */
+  async function onCopy(_field: string, value: string) {
+    try {
+      await navigator.clipboard.writeText(value)
+      say(`已複製「${value}」`)
+    } catch {
+      say(`無法複製到剪貼簿，請自行選取：${value}`, false, 'warn')
+    }
+  }
 
   async function onSaved(result: SaveSuccess, previous: VehicleRecord | undefined) {
     await refresh()
@@ -188,6 +198,7 @@ export function App({ download = browserDownload }: AppProps) {
             onAdd={() => setForm({ mode: 'add' })}
             onEdit={(record) => setForm({ mode: 'edit', record })}
             onDelete={setDeleting}
+            onCopy={onCopy}
             onImport={() => navigate('import')}
             onRetry={() => void refresh()}
           />

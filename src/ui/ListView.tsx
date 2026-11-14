@@ -20,6 +20,7 @@ interface ListViewProps {
   onAdd: () => void
   onEdit: (record: VehicleRecord) => void
   onDelete: (record: VehicleRecord) => void
+  onCopy: (field: string, value: string) => void
   onImport: () => void
   onRetry: () => void
 }
@@ -171,6 +172,7 @@ export function ListView(p: ListViewProps) {
           keyword={needle}
           onEdit={p.onEdit}
           onDelete={p.onDelete}
+          onCopy={p.onCopy}
         />
       )}
     </section>

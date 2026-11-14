@@ -1,0 +1,164 @@
+
+ RUN  v5.1.0 /Users/leonardoroosevelt/Project/ochema
+
+ ❯ tests/steps/copy-value.steps.ts (32 tests | 8 failed | 14 skipped) 349ms
+   ❯ Feature: 點擊複製名單欄位 (32)
+     ❯ Scenario: 點擊任一欄位只複製該欄位的值 ［範例 1｜車頭車號｜KLP-7988］ (3)
+       × When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "車頭車號" 128ms
+     ❯ Scenario: 點擊任一欄位只複製該欄位的值 ［範例 2｜車斗車號｜20-9A］ (3)
+       × When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "車斗車號" 24ms
+     ❯ Scenario: 點擊任一欄位只複製該欄位的值 ［範例 3｜駕駛姓名｜王大明］ (3)
+       × When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "駕駛姓名" 22ms
+     ❯ Scenario: 點擊任一欄位只複製該欄位的值 ［範例 4｜駕駛身分證｜A123456789］ (3)
+       × When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "駕駛身分證" 21ms
+     ❯ Scenario: 查詢標示命中文字時，複製的仍是完整的值 (3)
+       × When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "車頭車號" 10ms
+     ❯ Scenario: 不用滑鼠也能複製 (2)
+       × When 我用鍵盤移到車頭車號 "KLP-7988" 那一筆的 "駕駛身分證" 並按 Enter 18ms
+     ❯ Scenario: 複製不會開啟編輯，也不會改動名單 (3)
+       × When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "駕駛姓名" 29ms
+     ❯ Scenario: 裝置不允許複製時告知失敗 (4)
+       × When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "車斗車號" 30ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/steps/copy-value.steps.ts > Feature: 點擊複製名單欄位 > Scenario: 點擊任一欄位只複製該欄位的值 ［範例 1｜車頭車號｜KLP-7988］ > When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "車頭車號"
+AssertionError: 「車頭車號」那一格應有可操作的複製按鈕（button）: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ copyButton tests/support/stepLib/copy.ts:17:55
+     15|   const cell = w.ui.cells(w.ui.rowBy('headPlate', head))[index]!
+     16|   const buttons = within(cell).queryAllByRole('button')
+     17|   expect(buttons, `「${column}」那一格應有可操作的複製按鈕（button）`).toHaveLength(1)
+       |                                                       ^
+     18|   return buttons[0]!
+     19| }
+ ❯ tests/support/stepLib/copy.ts:33:22
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/steps/copy-value.steps.ts > Feature: 點擊複製名單欄位 > Scenario: 點擊任一欄位只複製該欄位的值 ［範例 2｜車斗車號｜20-9A］ > When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "車斗車號"
+ FAIL  tests/steps/copy-value.steps.ts > Feature: 點擊複製名單欄位 > Scenario: 裝置不允許複製時告知失敗 > When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "車斗車號"
+AssertionError: 「車斗車號」那一格應有可操作的複製按鈕（button）: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ copyButton tests/support/stepLib/copy.ts:17:55
+     15|   const cell = w.ui.cells(w.ui.rowBy('headPlate', head))[index]!
+     16|   const buttons = within(cell).queryAllByRole('button')
+     17|   expect(buttons, `「${column}」那一格應有可操作的複製按鈕（button）`).toHaveLength(1)
+       |                                                       ^
+     18|   return buttons[0]!
+     19| }
+ ❯ tests/support/stepLib/copy.ts:33:22
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/steps/copy-value.steps.ts > Feature: 點擊複製名單欄位 > Scenario: 點擊任一欄位只複製該欄位的值 ［範例 3｜駕駛姓名｜王大明］ > When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "駕駛姓名"
+ FAIL  tests/steps/copy-value.steps.ts > Feature: 點擊複製名單欄位 > Scenario: 複製不會開啟編輯，也不會改動名單 > When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "駕駛姓名"
+AssertionError: 「駕駛姓名」那一格應有可操作的複製按鈕（button）: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ copyButton tests/support/stepLib/copy.ts:17:55
+     15|   const cell = w.ui.cells(w.ui.rowBy('headPlate', head))[index]!
+     16|   const buttons = within(cell).queryAllByRole('button')
+     17|   expect(buttons, `「${column}」那一格應有可操作的複製按鈕（button）`).toHaveLength(1)
+       |                                                       ^
+     18|   return buttons[0]!
+     19| }
+ ❯ tests/support/stepLib/copy.ts:33:22
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/steps/copy-value.steps.ts > Feature: 點擊複製名單欄位 > Scenario: 點擊任一欄位只複製該欄位的值 ［範例 4｜駕駛身分證｜A123456789］ > When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "駕駛身分證"
+AssertionError: 「駕駛身分證」那一格應有可操作的複製按鈕（button）: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ copyButton tests/support/stepLib/copy.ts:17:55
+     15|   const cell = w.ui.cells(w.ui.rowBy('headPlate', head))[index]!
+     16|   const buttons = within(cell).queryAllByRole('button')
+     17|   expect(buttons, `「${column}」那一格應有可操作的複製按鈕（button）`).toHaveLength(1)
+       |                                                       ^
+     18|   return buttons[0]!
+     19| }
+ ❯ tests/support/stepLib/copy.ts:33:22
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/steps/copy-value.steps.ts > Feature: 點擊複製名單欄位 > Scenario: 查詢標示命中文字時，複製的仍是完整的值 > When 我在名單上點擊車頭車號 "KLP-7988" 那一筆的 "車頭車號"
+AssertionError: 「車頭車號」那一格應有可操作的複製按鈕（button）: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ copyButton tests/support/stepLib/copy.ts:17:55
+     15|   const cell = w.ui.cells(w.ui.rowBy('headPlate', head))[index]!
+     16|   const buttons = within(cell).queryAllByRole('button')
+     17|   expect(buttons, `「${column}」那一格應有可操作的複製按鈕（button）`).toHaveLength(1)
+       |                                                       ^
+     18|   return buttons[0]!
+     19| }
+ ❯ tests/support/stepLib/copy.ts:33:22
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tests/steps/copy-value.steps.ts > Feature: 點擊複製名單欄位 > Scenario: 不用滑鼠也能複製 > When 我用鍵盤移到車頭車號 "KLP-7988" 那一筆的 "駕駛身分證" 並按 Enter
+AssertionError: 「駕駛身分證」那一格應有可操作的複製按鈕（button）: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ copyButton tests/support/stepLib/copy.ts:17:55
+     15|   const cell = w.ui.cells(w.ui.rowBy('headPlate', head))[index]!
+     16|   const buttons = within(cell).queryAllByRole('button')
+     17|   expect(buttons, `「${column}」那一格應有可操作的複製按鈕（button）`).toHaveLength(1)
+       |                                                       ^
+     18|   return buttons[0]!
+     19| }
+ ❯ tests/support/stepLib/copy.ts:40:20
+ ❯ Object.fn tests/support/runFeature.ts:25:7
+ ❯ node_modules/.pnpm/@amiceli+vitest-cucumber@8.0.0_vitest@5.1.0_@types+node@26.6.6_jsdom@30.1.3_vite@7.3.7__d279958fe51ecf3bb58ab6339790c1ea/node_modules/@amiceli/vitest-cucumber/dist/describe-feature-CdxOfcs4.mjs:159:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 10 passed | 14 skipped (32)
+   Start at  11:16:31
+   Duration  1.13s (environment 37%, tests 34%, import 17%, transform 9%, setup 2%)
+

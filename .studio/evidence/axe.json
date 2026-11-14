@@ -77,6 +77,18 @@
       ],
       "passes": 30
     },
+    "10a-list-copy": {
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "passes": 30
+    },
     "11-delete-dialog": {
       "violations": [],
       "incomplete": [],

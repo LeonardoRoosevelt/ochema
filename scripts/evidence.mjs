@@ -292,6 +292,8 @@ const isAriaDisabled = async (loc) => (await loc.getAttribute('aria-disabled')) 
 
 async function groupList(browser) {
   const { context, page } = await newGroup(browser, '名單流程')
+  // 點擊複製需要剪貼簿權限（127.0.0.1 視為安全來源）；讀回剪貼簿驗證內容
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: ORIGIN })
   let rowsBeforeDelete = 0
   await step('01', '空狀態', page, async (s) => {
     await gotoApp(page)
@@ -385,6 +387,17 @@ async function groupList(browser) {
     await page.getByText('查無符合的資料').waitFor()
     await s.shoot()
     await page.getByRole('button', { name: '清除關鍵字' }).first().click()
+  })
+
+  await step('10a', '點擊複製-單格只複製值', page, async (s) => {
+    await page.getByRole('button', { name: `複製車斗車號 ${R1.tail}`, exact: true }).click()
+    await page.getByRole('status', { name: '操作結果' }).getByText(`已複製「${R1.tail}」`).waitFor()
+    const clip = await page.evaluate(() => navigator.clipboard.readText())
+    must(clip === R1.tail, `剪貼簿應為「${R1.tail}」，實得「${clip}」`)
+    must((await page.getByRole('dialog').count()) === 0, '複製不應開啟任何對話框')
+    s.note(`剪貼簿＝${clip}`)
+    await s.shoot()
+    await s.axe('list-copy')
   })
 
   await step('11', '刪除確認', page, async (s) => {

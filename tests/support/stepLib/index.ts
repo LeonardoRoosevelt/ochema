@@ -1,4 +1,5 @@
 import { registerCommon } from './common'
+import { registerCopy } from './copy'
 import { registerDuplicates } from './duplicates'
 import { registerExport } from './export'
 import { registerFieldValidation } from './fieldValidation'
@@ -20,6 +21,7 @@ export function registerAllSteps(r: Reg): void {
   registerDuplicates(r)
   registerRecords(r)
   registerSearch(r)
+  registerCopy(r)
   registerImportApi(r)
   registerImportUi(r)
   registerExport(r)

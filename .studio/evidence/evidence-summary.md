@@ -1,7 +1,7 @@
 # ochema 證據摘要
 
-- 產生時間：2026-11-09T12:18:54.056Z
-- 步驟：41 通過／0 失敗（共 41）
+- 產生時間：2026-11-14T03:23:43.124Z
+- 步驟：42 通過／0 失敗（共 42）
 - console error／pageerror：0
 - 對外請求（非 http://127.0.0.1:4173）：0（預期 0）
 - axe（WCAG 2.1 A／AA）違規規則數（各畫面加總）：0
@@ -28,20 +28,21 @@
 | 08 | 總覽 | 通過 | [08-總覽-desktop.png](../../.studio/evidence/screens/08-總覽-desktop.png)<br>[08-總覽-mobile.png](../../.studio/evidence/screens/08-總覽-mobile.png) |  |
 | 09 | 查詢-命中 | 通過 | [09-查詢-命中-desktop.png](../../.studio/evidence/screens/09-查詢-命中-desktop.png)<br>[09-查詢-命中-mobile.png](../../.studio/evidence/screens/09-查詢-命中-mobile.png) |  |
 | 10 | 查詢-無結果 | 通過 | [10-查詢-無結果-desktop.png](../../.studio/evidence/screens/10-查詢-無結果-desktop.png)<br>[10-查詢-無結果-mobile.png](../../.studio/evidence/screens/10-查詢-無結果-mobile.png) |  |
+| 10a | 點擊複製-單格只複製值 | 通過 | [10a-點擊複製-單格只複製值-desktop.png](../../.studio/evidence/screens/10a-點擊複製-單格只複製值-desktop.png)<br>[10a-點擊複製-單格只複製值-mobile.png](../../.studio/evidence/screens/10a-點擊複製-單格只複製值-mobile.png) | 剪貼簿＝20-9A |
 | 11 | 刪除確認 | 通過 | [11-刪除確認-desktop.png](../../.studio/evidence/screens/11-刪除確認-desktop.png)<br>[11-刪除確認-mobile.png](../../.studio/evidence/screens/11-刪除確認-mobile.png) | 預設焦點＝取消 |
 | 12 | 刪除完成 | 通過 | [12-刪除完成-desktop.png](../../.studio/evidence/screens/12-刪除完成-desktop.png)<br>[12-刪除完成-mobile.png](../../.studio/evidence/screens/12-刪除完成-mobile.png) | 刪除後 activeElement=h2#list-h.stitle（名單） |
 | 13 | 資料頁 | 通過 | [13-資料頁-desktop.png](../../.studio/evidence/screens/13-資料頁-desktop.png)<br>[13-資料頁-mobile.png](../../.studio/evidence/screens/13-資料頁-mobile.png) |  |
-| 13a | 分頁標題 | 通過 | — | document.title：{"名單":"名單 — ochema","總覽":"總覽 — ochema","資料":"資料 — ochema"}（切換分頁後有改變） |
-| 14 | 匯出-xlsx | 通過 | [14-匯出-xlsx-desktop.png](../../.studio/evidence/screens/14-匯出-xlsx-desktop.png)<br>[14-匯出-xlsx-mobile.png](../../.studio/evidence/screens/14-匯出-xlsx-mobile.png) | ochema-名單-20261109-2018.xlsx（16459 bytes） |
-| 15 | 匯出-xls | 通過 | [15-匯出-xls-desktop.png](../../.studio/evidence/screens/15-匯出-xls-desktop.png)<br>[15-匯出-xls-mobile.png](../../.studio/evidence/screens/15-匯出-xls-mobile.png) | ochema-名單-20261109-2018.xls（4096 bytes） |
-| 16 | 匯出-csv | 通過 | [16-匯出-csv-desktop.png](../../.studio/evidence/screens/16-匯出-csv-desktop.png)<br>[16-匯出-csv-mobile.png](../../.studio/evidence/screens/16-匯出-csv-mobile.png) | ochema-名單-20261109-2018.csv（164 bytes） |
+| 13a | 分頁標題 | 通過 | — | document.title：{"名單":"名單 — 土方車輛","總覽":"總覽 — 土方車輛","資料":"資料 — 土方車輛"}（切換分頁後有改變） |
+| 14 | 匯出-xlsx | 通過 | [14-匯出-xlsx-desktop.png](../../.studio/evidence/screens/14-匯出-xlsx-desktop.png)<br>[14-匯出-xlsx-mobile.png](../../.studio/evidence/screens/14-匯出-xlsx-mobile.png) | 土方車輛-名單-20261114-1123.xlsx（16459 bytes） |
+| 15 | 匯出-xls | 通過 | [15-匯出-xls-desktop.png](../../.studio/evidence/screens/15-匯出-xls-desktop.png)<br>[15-匯出-xls-mobile.png](../../.studio/evidence/screens/15-匯出-xls-mobile.png) | 土方車輛-名單-20261114-1123.xls（4096 bytes） |
+| 16 | 匯出-csv | 通過 | [16-匯出-csv-desktop.png](../../.studio/evidence/screens/16-匯出-csv-desktop.png)<br>[16-匯出-csv-mobile.png](../../.studio/evidence/screens/16-匯出-csv-mobile.png) | 土方車輛-名單-20261114-1123.csv（164 bytes） |
 | 17 | 匯入-選擇檔案 | 通過 | [17-匯入-選擇檔案-desktop.png](../../.studio/evidence/screens/17-匯入-選擇檔案-desktop.png)<br>[17-匯入-選擇檔案-mobile.png](../../.studio/evidence/screens/17-匯入-選擇檔案-mobile.png) |  |
 | 18 | 匯入預覽（含格式錯誤，被擋下）-xls | 通過 | [18-匯入預覽-含格式錯誤-被擋下--xls-desktop.png](../../.studio/evidence/screens/18-匯入預覽-含格式錯誤-被擋下--xls-desktop.png)<br>[18-匯入預覽-含格式錯誤-被擋下--xls-mobile.png](../../.studio/evidence/screens/18-匯入預覽-含格式錯誤-被擋下--xls-mobile.png) | 可匯入 3 筆 檔內重複 1 筆 整列相同 1 筆 格式錯誤 1 筆 |
 | 19 | 匯入預覽（含格式錯誤，被擋下）-csv | 通過 | [19-匯入預覽-含格式錯誤-被擋下--csv-desktop.png](../../.studio/evidence/screens/19-匯入預覽-含格式錯誤-被擋下--csv-desktop.png)<br>[19-匯入預覽-含格式錯誤-被擋下--csv-mobile.png](../../.studio/evidence/screens/19-匯入預覽-含格式錯誤-被擋下--csv-mobile.png) | 可匯入 3 筆 檔內重複 1 筆 整列相同 1 筆 格式錯誤 1 筆 |
 | 20 | 匯入預覽（含格式錯誤，被擋下）-xlsx | 通過 | [20-匯入預覽-含格式錯誤-被擋下--xlsx-desktop.png](../../.studio/evidence/screens/20-匯入預覽-含格式錯誤-被擋下--xlsx-desktop.png)<br>[20-匯入預覽-含格式錯誤-被擋下--xlsx-mobile.png](../../.studio/evidence/screens/20-匯入預覽-含格式錯誤-被擋下--xlsx-mobile.png) | 可匯入 3 筆 檔內重複 1 筆 整列相同 1 筆 格式錯誤 1 筆；被擋下後名單仍共 3 筆 |
 | 21 | 匯入預覽（無錯誤）-寫明將刪除／匯入 | 通過 | [21-匯入預覽-無錯誤--寫明將刪除-匯入-desktop.png](../../.studio/evidence/screens/21-匯入預覽-無錯誤--寫明將刪除-匯入-desktop.png)<br>[21-匯入預覽-無錯誤--寫明將刪除-匯入-mobile.png](../../.studio/evidence/screens/21-匯入預覽-無錯誤--寫明將刪除-匯入-mobile.png) | 可匯入 3 筆 檔內重複 1 筆 整列相同 1 筆 格式錯誤 0 筆 |
 | 21a | 二次確認-預設焦點取消，取消後名單不變 | 通過 | [21a-二次確認-預設焦點取消-取消後名單不變-desktop.png](../../.studio/evidence/screens/21a-二次確認-預設焦點取消-取消後名單不變-desktop.png)<br>[21a-二次確認-預設焦點取消-取消後名單不變-mobile.png](../../.studio/evidence/screens/21a-二次確認-預設焦點取消-取消後名單不變-mobile.png) | 預設焦點＝取消；取消後名單仍共 3 筆 |
-| 21b | 二次確認-先匯出目前資料，名單不變、對話框仍在 | 通過 | [21b-二次確認-先匯出目前資料-名單不變-對話框仍在-desktop.png](../../.studio/evidence/screens/21b-二次確認-先匯出目前資料-名單不變-對話框仍在-desktop.png)<br>[21b-二次確認-先匯出目前資料-名單不變-對話框仍在-mobile.png](../../.studio/evidence/screens/21b-二次確認-先匯出目前資料-名單不變-對話框仍在-mobile.png) | ochema-名單-20261109-2018.xlsx（16459 bytes）；先匯出後名單仍共 3 筆 |
+| 21b | 二次確認-先匯出目前資料，名單不變、對話框仍在 | 通過 | [21b-二次確認-先匯出目前資料-名單不變-對話框仍在-desktop.png](../../.studio/evidence/screens/21b-二次確認-先匯出目前資料-名單不變-對話框仍在-desktop.png)<br>[21b-二次確認-先匯出目前資料-名單不變-對話框仍在-mobile.png](../../.studio/evidence/screens/21b-二次確認-先匯出目前資料-名單不變-對話框仍在-mobile.png) | 土方車輛-名單-20261114-1123.xlsx（16459 bytes）；先匯出後名單仍共 3 筆 |
 | 22 | 替換結果 | 通過 | [22-替換結果-desktop.png](../../.studio/evidence/screens/22-替換結果-desktop.png)<br>[22-替換結果-mobile.png](../../.studio/evidence/screens/22-替換結果-mobile.png) | 匯入完成：已刪除 3 筆、已匯入 4 筆 |
 | 23 | 替換後名單＝檔案內容，檔內重複持續標示 | 通過 | [23-替換後名單-檔案內容-檔內重複持續標示-desktop.png](../../.studio/evidence/screens/23-替換後名單-檔案內容-檔內重複持續標示-desktop.png)<br>[23-替換後名單-檔案內容-檔內重複持續標示-mobile.png](../../.studio/evidence/screens/23-替換後名單-檔案內容-檔內重複持續標示-mobile.png) | 替換後共 4 筆 |
 | 24 | 離線-首次載入後 SW 就緒 | 通過 | — | SW scope=http://127.0.0.1:4173/ochema/，預快取 11 項 |
@@ -63,7 +64,7 @@
 ## 離線與對外請求
 
 - 刪除一筆後 document.activeElement：h2#list-h.stitle（名單）
-- document.title：{"名單":"名單 — ochema","總覽":"總覽 — ochema","資料":"資料 — ochema"}（切換分頁後有改變）
+- document.title：{"名單":"名單 — 土方車輛","總覽":"總覽 — 土方車輛","資料":"資料 — 土方車輛"}（切換分頁後有改變）
 - 離線流程期間對外（非 http://127.0.0.1:4173）請求：0
 - reduced-motion 計算樣式：{"seal":"none 0s / transition 0s","btn":"none 0s / transition 0s","mq":true}
 
@@ -84,6 +85,7 @@
 | 06-list-notice | 0 | 1 | 33 | — |
 | 08-overview | 0 | 1 | 24 | — |
 | 09-search-hit | 0 | 1 | 30 | — |
+| 10a-list-copy | 0 | 1 | 30 | — |
 | 11-delete-dialog | 0 | 0 | 16 | — |
 | 13-data | 0 | 1 | 26 | — |
 | 17-import-select | 0 | 1 | 25 | — |

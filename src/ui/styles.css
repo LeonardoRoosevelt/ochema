@@ -80,6 +80,8 @@ table.grid{width:100%;border-collapse:collapse}
 .c-ops .btn{margin-right:6px}
 .plate{display:inline-block;white-space:nowrap}
 .idv{letter-spacing:.04em;white-space:nowrap}
+.cellcopy{display:inline-block;max-width:100%;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;letter-spacing:inherit;text-align:left;cursor:pointer;border-radius:var(--r)}
+.cellcopy:hover{background:rgb(142 36 24 / .1);text-decoration:underline dotted;text-underline-offset:4px}
 .tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:.875rem;font-weight:700;line-height:1.35;vertical-align:middle}
 .tag-dup{color:var(--dup);background:var(--dup-bg)}
 .tag-warn{color:var(--warn);background:var(--warn-bg)}
@@ -91,6 +93,7 @@ table.grid{width:100%;border-collapse:collapse}
   .grid.main,.grid.main tbody,.grid.mini,.grid.mini tbody{display:block}
   .grid.main tr{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"head tail" "name name" "id id" "flags flags" "ops ops";gap:6px 12px;padding:14px 14px 12px;margin:0 0 14px}
   .grid.main td{padding:0;display:block;min-width:0}
+  .grid.main .cellcopy{display:flex;align-items:center;width:100%;min-height:44px}
   .grid.main .c-head{grid-area:head}.grid.main .c-tail{grid-area:tail}.grid.main .c-name{grid-area:name}
   .grid.main .c-id{grid-area:id}.grid.main .c-flags{grid-area:flags}.grid.main .c-ops{grid-area:ops;display:flex;gap:10px;padding-top:6px}
   .grid.main .c-ops .btn{flex:1;margin:0}

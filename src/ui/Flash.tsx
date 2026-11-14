@@ -6,6 +6,8 @@ export interface FlashData {
   body: ReactNode
   /** L1 落款蓋章：存檔成功時蓋一枚「存」字印 */
   seal?: boolean
+  /** 失敗類訊息（例如無法複製）改用警示樣式，不可沿用成功的勾勾 */
+  tone?: 'warn'
 }
 
 const VISIBLE_MS = 8000
@@ -46,9 +48,9 @@ export function Flash({ flash, onExpire }: { flash: FlashData | undefined; onExp
     >
       <div role="status" aria-label="操作結果">
         {flash && (
-          <div key={flash.id} className={`msg msg-ok compact${flash.seal ? '' : ' nosel'}`}>
+          <div key={flash.id} className={`msg ${flash.tone === 'warn' ? 'msg-warn' : 'msg-ok'} compact${flash.seal ? '' : ' nosel'}`}>
             <div className="msg-h">
-              <Icon name="ok" />
+              <Icon name={flash.tone === 'warn' ? 'warn' : 'ok'} />
               <span>{flash.body}</span>
             </div>
             {flash.seal && (

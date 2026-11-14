@@ -8,7 +8,7 @@
   "gates": {
     "A": {
       "status": "passed",
-      "at": "2026-11-09T18:03:53",
+      "at": "2026-11-14T11:14:26",
       "failures": []
     },
     "B": {
@@ -18,20 +18,20 @@
     },
     "C": {
       "status": "passed",
-      "at": "2026-11-10T10:03:04",
+      "at": "2026-11-14T11:18:56",
       "failures": []
     },
     "D": {
       "status": "passed",
-      "at": "2026-11-10T10:03:36",
+      "at": "2026-11-14T11:26:15",
       "failures": []
     }
   },
   "approvals": {
     "A": {
-      "at": "2026-11-09T18:14:14",
-      "note": "使用者核可匯入整份替換（142 情境；空名單亦二次確認）；decisions/import-replace.md",
-      "fingerprint": "efc521d356cfc751ec6c6ae66c82c04a701adb77d5b12ad292fa7f87839d2701"
+      "at": "2026-11-14T11:15:12",
+      "note": "2026-11-14 新增點擊複製名單欄位（copy-value.feature 5 情境，共 147）；單格只複製值、名單頁限定",
+      "fingerprint": "9d40e4a63721238fea041c230b2c895591e9b1249c516ba2bf2597e2c648e118"
     },
     "B": {
       "at": "2026-11-09T11:51:01",

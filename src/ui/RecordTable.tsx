@@ -33,6 +33,15 @@ export function IdWarningTag({ code }: { code: IdWarning }) {
   )
 }
 
+/** 可點擊複製的一格：按鈕內只放值（textContent 仍就是值），名稱用 aria-label 說明動作。 */
+function CopyValue({ field, value, onCopy, children }: { field: string; value: string; onCopy: (field: string, value: string) => void; children: ReactNode }) {
+  return (
+    <button type="button" className="cellcopy" aria-label={`複製${field} ${value}`} onClick={() => onCopy(field, value)}>
+      {children}
+    </button>
+  )
+}
+
 interface RecordTableProps {
   /** 已套用查詢的名單 */
   records: readonly VehicleRecord[]
@@ -41,14 +50,15 @@ interface RecordTableProps {
   keyword: string
   onEdit: (record: VehicleRecord) => void
   onDelete: (record: VehicleRecord) => void
+  onCopy: (field: string, value: string) => void
 }
 
 /**
  * S1 名單。桌面為表格、手機為卡片，共用同一份 DOM（由 CSS 轉換）；
  * 因此明確標上 ARIA 角色，避免 CSS 把 display 改成 grid／block 之後瀏覽器丟掉表格語意。
- * 前四格的文字就是值（無任何前綴）；重複種類與駕駛身分證警示都放在「標示」格。
+ * 前四格的文字就是值（無任何前綴），且是點一下就複製該值的按鈕；重複種類與駕駛身分證警示都放在「標示」格。
  */
-export function RecordTable({ records, kindsById, idWarningById, keyword, onEdit, onDelete }: RecordTableProps) {
+export function RecordTable({ records, kindsById, idWarningById, keyword, onEdit, onDelete, onCopy }: RecordTableProps) {
   const [limit, setLimit] = useState(PAGE_SIZE)
   const shown = records.slice(0, limit)
 
@@ -72,22 +82,30 @@ export function RecordTable({ records, kindsById, idWarningById, keyword, onEdit
             return (
               <tr key={r.id} role="row" aria-rowindex={index + 2} className={`${kinds.length ? 'has-dup' : ''} ${warning ? 'has-warn' : ''}`.trim()}>
                 <td role="cell" data-label="車頭車號" className="c-head">
-                  <span className="plate plate-head">
-                    <Hl text={r.headPlate} keyword={keyword} />
-                  </span>
+                  <CopyValue field="車頭車號" value={r.headPlate} onCopy={onCopy}>
+                    <span className="plate plate-head">
+                      <Hl text={r.headPlate} keyword={keyword} />
+                    </span>
+                  </CopyValue>
                 </td>
                 <td role="cell" data-label="車斗車號" className="c-tail">
-                  <span className="plate plate-tail">
-                    <Hl text={r.tailPlate} keyword={keyword} />
-                  </span>
+                  <CopyValue field="車斗車號" value={r.tailPlate} onCopy={onCopy}>
+                    <span className="plate plate-tail">
+                      <Hl text={r.tailPlate} keyword={keyword} />
+                    </span>
+                  </CopyValue>
                 </td>
                 <td role="cell" data-label="駕駛姓名" className="c-name">
-                  <Hl text={r.ownerName} keyword={keyword} />
+                  <CopyValue field="駕駛姓名" value={r.ownerName} onCopy={onCopy}>
+                    <Hl text={r.ownerName} keyword={keyword} />
+                  </CopyValue>
                 </td>
                 <td role="cell" data-label="駕駛身分證" className="c-id">
-                  <span className="idv">
-                    <Hl text={r.idNumber} keyword={keyword} />
-                  </span>
+                  <CopyValue field="駕駛身分證" value={r.idNumber} onCopy={onCopy}>
+                    <span className="idv">
+                      <Hl text={r.idNumber} keyword={keyword} />
+                    </span>
+                  </CopyValue>
                 </td>
                 <td role="cell" data-label="標示" className="c-flags">
                   {kinds.map((k) => (
